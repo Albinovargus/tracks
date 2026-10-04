@@ -6,6 +6,14 @@
 #   SENTRY_AUTH_TOKEN      — Sentry source map upload (deploy workflows)
 #   SENTRY_ORG             — Sentry organization slug (deploy workflows)
 #   SENTRY_PROJECT_WEB     — Sentry project for web app (deploy workflows)
+#
+# GitHub Variables (public values, Settings → Secrets and variables → Variables):
+#   VITE_SUPABASE_URL      — Hosted Supabase project URL (GitHub Pages build)
+#   VITE_SUPABASE_ANON_KEY — Supabase publishable/anon key (GitHub Pages build)
+#   VITE_API_BASE_URL      — Hosted API URL, once deployed (GitHub Pages build)
+#   VITE_SENTRY_DSN        — Sentry DSN for the web app (optional)
+#   DEPLOY_API             — "true" to enable the Railway deploy job
+#   SUPABASE_PROJECT_REF   — Hosted project ref; enables the migrate job
 name: CI
 
 on:

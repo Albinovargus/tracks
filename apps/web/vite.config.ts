@@ -5,6 +5,8 @@ import tailwindcss from '@tailwindcss/vite';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig({
+  // GitHub Pages serves project sites from /<repo>/; local dev and Capacitor use /
+  base: process.env.VITE_BASE_PATH ?? '/',
   plugins: [
     react(),
     tailwindcss(),

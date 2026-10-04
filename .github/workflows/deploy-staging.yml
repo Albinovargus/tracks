@@ -32,6 +32,8 @@ jobs:
   deploy-api:
     runs-on: ubuntu-latest
     needs: [validate]
+    # Set repo variable DEPLOY_API=true once the Railway secrets are configured
+    if: vars.DEPLOY_API == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -75,6 +77,11 @@ jobs:
 
       - run: pnpm --filter @tracks/web build
         env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT_WEB }}
@@ -89,12 +96,20 @@ jobs:
   migrate:
     runs-on: ubuntu-latest
     needs: [deploy-api]
+    # Set repo variable SUPABASE_PROJECT_REF once the Supabase secrets are configured;
+    # still runs when deploy-api is skipped
+    if: ${{ !cancelled() && !failure() && vars.SUPABASE_PROJECT_REF != '' }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+
+      - run: supabase link --project-ref ${{ vars.SUPABASE_PROJECT_REF }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
       - run: supabase db push --linked
         env:
