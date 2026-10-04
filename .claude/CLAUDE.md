@@ -50,7 +50,7 @@ pnpm cap:add:android  # Add Android platform
 15. **Zod-first** — z.infer<typeof Schema>, never manual interfaces for shared data.
 16. **No TypeScript enums** — Use z.enum(). Serializes correctly + runtime validation.
 17. **No any** — Use unknown + narrow. Any `any` requires a comment explaining why.
-18. **Node 22 LTS** — Pin in .nvmrc and engines.
+18. **Node 24 LTS** — Pin in .nvmrc and engines.
 
 ### Backend
 19. **Background jobs** — BullMQ only. Jobs in apps/api/src/jobs/. Never setTimeout or inline async.

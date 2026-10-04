@@ -20,7 +20,7 @@ These plugins are available from the [official Anthropic plugin marketplace](htt
 
 | Plugin | What it does | Why it matters here |
 |--------|-------------|---------------------|
-| **context7** | Injects live, up-to-date docs for any library into Claude's context | Ensures Claude uses current APIs for React 19, Fastify 5, Supabase, Tailwind v4, Vite 7, Capacitor 8, Zod, etc. |
+| **context7** | Injects live, up-to-date docs for any library into Claude's context | Ensures Claude uses current APIs for React 19, Fastify 5, Supabase, Tailwind v4, Vite 8, Capacitor 8, Zod, etc. |
 | **playwright** | Browser automation via Playwright MCP | Powers E2E test writing and debugging for the `e2e/` suite |
 | **frontend-design** | Generates polished, production-grade UI components | Build distinctive interfaces for the React SPA without generic AI aesthetics |
 | **feature-dev** | Guided feature development with codebase understanding | Follows this repo's three-file rule and architecture patterns automatically |
@@ -469,8 +469,8 @@ After replacing, run `pnpm install` to update the lockfile with your new package
 
 ## Prerequisites
 
-1. **Node.js 22** -- pinned in `.nvmrc`, use `nvm use`
-2. **pnpm 9** -- `corepack enable` to activate
+1. **Node.js 24** -- pinned in `.nvmrc`, use `nvm use`
+2. **pnpm 12** -- `corepack enable` to activate
 3. **Docker** -- for Redis and Supabase local dev
 4. **Supabase CLI** -- `brew install supabase/tap/supabase` or [install docs](https://supabase.com/docs/guides/cli/getting-started)
 5. **Xcode** -- iOS development only
@@ -484,7 +484,7 @@ After replacing, run `pnpm install` to update the lockfile with your new package
 
 ```bash
 git clone <repo-url> && cd tracks
-nvm use          # Switch to Node 22
+nvm use          # Switch to Node 24
 corepack enable  # Activate pnpm
 pnpm install
 ```

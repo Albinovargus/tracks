@@ -1,5 +1,5 @@
-FROM node:22-slim AS base
-RUN corepack enable && corepack prepare pnpm@latest --activate
+FROM node:24-slim AS base
+RUN corepack enable
 WORKDIR /app
 
 # Copy workspace config
@@ -21,8 +21,8 @@ RUN pnpm --filter @tracks/types build
 RUN pnpm --filter @tracks/api build
 
 # Production stage
-FROM node:22-slim AS production
-RUN corepack enable && corepack prepare pnpm@latest --activate
+FROM node:24-slim AS production
+RUN corepack enable
 WORKDIR /app
 
 COPY --from=base /app/pnpm-workspace.yaml /app/package.json /app/pnpm-lock.yaml ./
