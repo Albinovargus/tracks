@@ -1,7 +1,9 @@
-import { jwtVerify } from 'jose';
+import { createRemoteJWKSet, decodeProtectedHeader, jwtVerify } from 'jose';
+import type { JWTPayload } from 'jose';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 let jwtSecret: Uint8Array | undefined;
+let jwks: ReturnType<typeof createRemoteJWKSet> | undefined;
 
 function getJwtSecret(): Uint8Array {
   if (!jwtSecret) {
@@ -12,6 +14,35 @@ function getJwtSecret(): Uint8Array {
     jwtSecret = new TextEncoder().encode(secret);
   }
   return jwtSecret;
+}
+
+// Supabase signing keys (ES256/RS256) are published at the project's JWKS endpoint
+function getJwks(): ReturnType<typeof createRemoteJWKSet> {
+  if (!jwks) {
+    const supabaseUrl = process.env['SUPABASE_URL'];
+    if (!supabaseUrl) {
+      throw new Error('Missing SUPABASE_URL environment variable');
+    }
+    jwks = createRemoteJWKSet(
+      new URL('/auth/v1/.well-known/jwks.json', supabaseUrl)
+    );
+  }
+  return jwks;
+}
+
+// Legacy projects sign with the shared HS256 secret; newer ones use asymmetric keys
+async function verifyToken(token: string): Promise<JWTPayload> {
+  const { alg } = decodeProtectedHeader(token);
+  if (alg === 'HS256') {
+    const { payload } = await jwtVerify(token, getJwtSecret(), {
+      algorithms: ['HS256'],
+    });
+    return payload;
+  }
+  const { payload } = await jwtVerify(token, getJwks(), {
+    algorithms: ['ES256', 'RS256'],
+  });
+  return payload;
 }
 
 export async function authenticate(
@@ -33,7 +64,7 @@ export async function authenticate(
   const token = authHeader.slice(7);
 
   try {
-    const { payload } = await jwtVerify(token, getJwtSecret());
+    const payload = await verifyToken(token);
 
     request.user = {
       id: payload.sub ?? '',
