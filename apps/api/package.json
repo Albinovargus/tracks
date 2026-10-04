@@ -11,25 +11,25 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@fastify/cors": "^11",
-    "@fastify/multipart": "^9",
-    "@fastify/rate-limit": "^10",
+    "@fastify/cors": "^11.3.0",
+    "@fastify/multipart": "^9.4.0",
+    "@fastify/rate-limit": "^10.3.0",
+    "@sentry/node": "^9.47.2",
+    "@supabase/supabase-js": "^2.117.2",
     "@tracks/types": "workspace:*",
-    "@sentry/node": "^9",
-    "@supabase/supabase-js": "^2",
-    "bullmq": "^5",
-    "fastify": "^5",
-    "fastify-plugin": "^5",
-    "fastify-type-provider-zod": "^4",
-    "ioredis": "^5",
-    "jose": "^6",
-    "resend": "^4",
-    "zod": "^3"
+    "bullmq": "^5.81.5",
+    "fastify": "^5.12.5",
+    "fastify-plugin": "^5.1.0",
+    "fastify-type-provider-zod": "^4.0.2",
+    "ioredis": "^5.11.1",
+    "jose": "^6.2.12",
+    "resend": "^4.8.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@tracks/config": "workspace:*",
-    "tsx": "^4",
-    "typescript": "^5",
-    "vitest": "^3"
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
   }
 }
