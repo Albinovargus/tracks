@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const IdSchema = z.string().uuid();
+export const IdSchema = z.uuid();
 export type Id = z.infer<typeof IdSchema>;
 
 export const SortOrderSchema = z.enum(['asc', 'desc']);
@@ -15,7 +15,7 @@ export const PaginationParamsSchema = z.object({
 export type PaginationParams = z.infer<typeof PaginationParamsSchema>;
 
 export const TimestampsSchema = z.object({
-  created_at: z.string().datetime(),
-  updated_at: z.string().datetime(),
+  created_at: z.iso.datetime(),
+  updated_at: z.iso.datetime(),
 });
 export type Timestamps = z.infer<typeof TimestampsSchema>;

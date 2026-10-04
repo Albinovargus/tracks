@@ -4,7 +4,7 @@ import { ApiSuccessSchema } from '@tracks/types';
 
 const HealthDataSchema = z.object({
   status: z.literal('ok'),
-  timestamp: z.string().datetime(),
+  timestamp: z.iso.datetime(),
 });
 
 const healthPlugin: FastifyPluginAsyncZod = async function (fastify) {
