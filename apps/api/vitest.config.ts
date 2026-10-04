@@ -8,7 +8,6 @@ export default defineConfig({
       SUPABASE_URL: 'http://localhost:54321',
       SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key',
       SUPABASE_JWT_SECRET: 'super-secret-jwt-token-with-at-least-32-characters-long',
-      REDIS_URL: 'redis://localhost:6379',
       NODE_ENV: 'test',
     },
   },
