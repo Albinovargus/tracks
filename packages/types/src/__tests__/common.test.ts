@@ -73,6 +73,15 @@ describe('TimestampsSchema', () => {
     expect(result.created_at).toBe('2024-01-01T00:00:00.000Z');
   });
 
+  it('accepts Postgres timestamptz values with a UTC offset', () => {
+    expect(() =>
+      TimestampsSchema.parse({
+        created_at: '2026-10-04T21:39:39.724427+00:00',
+        updated_at: '2026-10-04T21:39:39.724427+00:00',
+      }),
+    ).not.toThrow();
+  });
+
   it('rejects non-datetime strings', () => {
     expect(() =>
       TimestampsSchema.parse({

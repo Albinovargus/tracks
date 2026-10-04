@@ -26,6 +26,15 @@ describe('UserProfileSchema', () => {
     expect(() => UserProfileSchema.parse({})).toThrow();
   });
 
+  it('accepts Postgres timestamptz values with a UTC offset', () => {
+    const result = UserProfileSchema.parse({
+      ...validProfile,
+      created_at: '2026-10-04T21:39:39.724427+00:00',
+      updated_at: '2026-10-04T21:39:39.724427+00:00',
+    });
+    expect(result.created_at).toBe('2026-10-04T21:39:39.724427+00:00');
+  });
+
   it('accepts null avatar_url', () => {
     const result = UserProfileSchema.parse(validProfile);
     expect(result.avatar_url).toBeNull();

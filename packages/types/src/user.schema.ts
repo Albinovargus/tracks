@@ -4,8 +4,8 @@ export const UserProfileSchema = z.object({
   id: z.uuid(),
   display_name: z.string().min(1),
   avatar_url: z.url().nullable(),
-  created_at: z.iso.datetime(),
-  updated_at: z.iso.datetime(),
+  created_at: z.iso.datetime({ offset: true }),
+  updated_at: z.iso.datetime({ offset: true }),
 });
 export type UserProfile = z.infer<typeof UserProfileSchema>;
 

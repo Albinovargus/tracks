@@ -15,7 +15,7 @@ export const PaginationParamsSchema = z.object({
 export type PaginationParams = z.infer<typeof PaginationParamsSchema>;
 
 export const TimestampsSchema = z.object({
-  created_at: z.iso.datetime(),
-  updated_at: z.iso.datetime(),
+  created_at: z.iso.datetime({ offset: true }),
+  updated_at: z.iso.datetime({ offset: true }),
 });
 export type Timestamps = z.infer<typeof TimestampsSchema>;
