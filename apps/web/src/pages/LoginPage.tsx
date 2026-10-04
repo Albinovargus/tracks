@@ -9,6 +9,7 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmationSentTo, setConfirmationSentTo] = useState<string | null>(null);
   const { signIn, signUp, session } = useAuth();
   const navigate = useNavigate();
 
@@ -21,10 +22,16 @@ export function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setConfirmationSentTo(null);
     setIsSubmitting(true);
     try {
       if (isSignUp) {
-        await signUp(email, password);
+        const { needsEmailConfirmation } = await signUp(email, password);
+        if (needsEmailConfirmation) {
+          setConfirmationSentTo(email);
+          setIsSignUp(false);
+          return;
+        }
       } else {
         await signIn(email, password);
       }
@@ -42,6 +49,12 @@ export function LoginPage() {
         <h1 className="mb-6 text-center text-2xl font-bold">
           {isSignUp ? 'Create Account' : 'Sign In'}
         </h1>
+        {confirmationSentTo && (
+          <div role="status" className="mb-4 rounded-md bg-muted p-3 text-sm">
+            Check your email — we sent a confirmation link to {confirmationSentTo}. Open it,
+            then sign in.
+          </div>
+        )}
         {error && (
           <div className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
             {error}
