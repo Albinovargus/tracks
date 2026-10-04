@@ -13,12 +13,12 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'pnpm --filter @myapp/api dev',
+      command: 'pnpm --filter @tracks/api dev',
       port: 3000,
       reuseExistingServer: !process.env['CI'],
     },
     {
-      command: 'pnpm --filter @myapp/web dev',
+      command: 'pnpm --filter @tracks/web dev',
       port: 5173,
       reuseExistingServer: !process.env['CI'],
     },

@@ -1,4 +1,4 @@
-import baseConfig from '@myapp/config/eslint.config.base';
+import baseConfig from '@tracks/config/eslint.config.base';
 
 export default [
   ...baseConfig,

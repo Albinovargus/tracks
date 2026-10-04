@@ -21,7 +21,7 @@ Example: `/new-route POST /users/me/avatar`
 1. **Identify plugin** — Determine which plugin file in `apps/api/src/plugins/` owns this route path
 2. **Define schema** — Add or reuse Zod schemas in `packages/types/` for request body/params/query and response
 3. **Re-export** — Ensure new schemas are exported from `packages/types/src/index.ts`
-4. **Build types** — `pnpm --filter @myapp/types build`
+4. **Build types** — `pnpm --filter @tracks/types build`
 5. **Add service method** — Implement business logic in the matching `apps/api/src/services/<name>.service.ts`
 6. **Add route** — Add route handler in the plugin file:
    ```typescript
@@ -39,4 +39,4 @@ Example: `/new-route POST /users/me/avatar`
    });
    ```
 7. **Add test** — Add test case in `apps/api/src/__tests__/<plugin>.test.ts`
-8. **Verify** — `pnpm typecheck && pnpm --filter @myapp/api test`
+8. **Verify** — `pnpm typecheck && pnpm --filter @tracks/api test`

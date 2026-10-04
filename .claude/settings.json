@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "filepath=$(jq -r '.tool_input.file_path') && case \"$filepath\" in */apps/api/*) pnpm --filter @myapp/api typecheck 2>&1 | tail -20;; */apps/web/*) pnpm --filter @myapp/web typecheck 2>&1 | tail -20;; */packages/types/*) pnpm --filter @myapp/types typecheck 2>&1 | tail -20;; esac || true"
+            "command": "filepath=$(jq -r '.tool_input.file_path') && case \"$filepath\" in */apps/api/*) pnpm --filter @tracks/api typecheck 2>&1 | tail -20;; */apps/web/*) pnpm --filter @tracks/web typecheck 2>&1 | tail -20;; */packages/types/*) pnpm --filter @tracks/types typecheck 2>&1 | tail -20;; esac || true"
           }
         ]
       },

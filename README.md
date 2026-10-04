@@ -1,4 +1,4 @@
-# MyApp Starter
+# Tracks Starter
 
 Production-ready monorepo starter for web + mobile apps — designed for AI-assisted development with [Claude Code](https://claude.com/claude-code).
 
@@ -434,7 +434,7 @@ graph LR
 ### Monorepo Structure
 
 ```
-myapp/
+tracks/
 ├── apps/
 │   ├── api/            Fastify v5 API
 │   └── web/            React 19 SPA + Capacitor
@@ -454,12 +454,12 @@ After cloning, run these find-and-replace operations across the entire repo:
 
 | Find | Replace with | Description |
 |------|-------------|-------------|
-| `@myapp` | `@yourscope` | Package scope in all package.json, imports, scripts |
-| `MyApp` | `YourApp` | Display name in UI, emails, HTML title |
+| `@tracks` | `@yourscope` | Package scope in all package.json, imports, scripts |
+| `Tracks` | `YourApp` | Display name in UI, emails, HTML title |
 | `myapp` | `yourapp` | Lowercase in config IDs, email addresses, URLs |
-| `com.myapp.starter` | `com.yourcompany.yourapp` | Capacitor app ID |
-| `myapp_starter` | `yourapp` | Supabase project ID in `supabase/config.toml` |
-| `noreply@myapp.com` | `noreply@yourdomain.com` | Email sender in `apps/api/src/services/email.service.ts` |
+| `com.tracks.app` | `com.yourcompany.yourapp` | Capacitor app ID |
+| `tracks_app` | `yourapp` | Supabase project ID in `supabase/config.toml` |
+| `noreply@tracks.com` | `noreply@yourdomain.com` | Email sender in `apps/api/src/services/email.service.ts` |
 
 > **Tip**: Use your editor's global find-and-replace (Cmd+Shift+H / Ctrl+Shift+H). All placeholder names are intentionally unique so they won't collide with real code.
 
@@ -483,7 +483,7 @@ After replacing, run `pnpm install` to update the lockfile with your new package
 ### Step 1: Install dependencies
 
 ```bash
-git clone <repo-url> && cd myapp
+git clone <repo-url> && cd tracks
 nvm use          # Switch to Node 22
 corepack enable  # Activate pnpm
 pnpm install
@@ -607,9 +607,9 @@ pnpm dev
 ### Running Individual Workspaces
 
 ```bash
-pnpm --filter @myapp/api dev
-pnpm --filter @myapp/web dev
-pnpm --filter @myapp/types watch
+pnpm --filter @tracks/api dev
+pnpm --filter @tracks/web dev
+pnpm --filter @tracks/types watch
 ```
 
 ### Database
@@ -838,13 +838,13 @@ supabase start
 Rebuild the types package so downstream workspaces pick up changes:
 
 ```bash
-pnpm --filter @myapp/types build
+pnpm --filter @tracks/types build
 ```
 
 Or use watch mode during development:
 
 ```bash
-pnpm --filter @myapp/types watch
+pnpm --filter @tracks/types watch
 ```
 </details>
 
@@ -861,7 +861,7 @@ VITE_API_BASE_URL_NATIVE=http://192.168.1.x:3000
 Rebuild and sync:
 
 ```bash
-pnpm --filter @myapp/web build && pnpm cap:sync
+pnpm --filter @tracks/web build && pnpm cap:sync
 ```
 </details>
 
@@ -871,7 +871,7 @@ pnpm --filter @myapp/web build && pnpm cap:sync
 This monorepo uses strict hoisting. If a package needs a dependency, add it explicitly:
 
 ```bash
-pnpm --filter @myapp/web add <package>
+pnpm --filter @tracks/web add <package>
 ```
 </details>
 

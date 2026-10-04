@@ -1,4 +1,4 @@
-# @myapp/web — React 19 SPA
+# @tracks/web — React 19 SPA
 
 ## Feature Folder Structure
 
@@ -24,10 +24,10 @@ src/features/<name>/
 ## Commands
 
 ```bash
-pnpm --filter @myapp/web dev        # Start Vite dev server
-pnpm --filter @myapp/web build      # Type check + Vite build
-pnpm --filter @myapp/web typecheck  # Type check without build
-pnpm --filter @myapp/web lint       # ESLint
+pnpm --filter @tracks/web dev        # Start Vite dev server
+pnpm --filter @tracks/web build      # Type check + Vite build
+pnpm --filter @tracks/web typecheck  # Type check without build
+pnpm --filter @tracks/web lint       # ESLint
 ```
 
 ## Patterns

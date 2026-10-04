@@ -1,4 +1,4 @@
-# @myapp/api — Fastify v5 API
+# @tracks/api — Fastify v5 API
 
 ## Plugin Pattern (Three-File Rule)
 
@@ -10,7 +10,7 @@ Every feature requires exactly three files:
 ### Plugin Example
 ```typescript
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { ApiSuccessSchema, SomeSchema } from '@myapp/types';
+import { ApiSuccessSchema, SomeSchema } from '@tracks/types';
 import * as someService from '../services/some.service.js';
 
 const somePlugin: FastifyPluginAsyncZod = async function (fastify) {
@@ -55,10 +55,10 @@ export async function getById(id: string) {
 ## Commands
 
 ```bash
-pnpm --filter @myapp/api dev        # Start dev server (tsx watch)
-pnpm --filter @myapp/api build      # Compile TypeScript
-pnpm --filter @myapp/api typecheck  # Type check without emit
-pnpm --filter @myapp/api lint       # ESLint
+pnpm --filter @tracks/api dev        # Start dev server (tsx watch)
+pnpm --filter @tracks/api build      # Compile TypeScript
+pnpm --filter @tracks/api typecheck  # Type check without emit
+pnpm --filter @tracks/api lint       # ESLint
 ```
 
 ## Environment Variables

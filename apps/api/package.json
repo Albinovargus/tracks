@@ -1,5 +1,5 @@
 {
-  "name": "@myapp/api",
+  "name": "@tracks/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
     "@fastify/cors": "^11",
     "@fastify/multipart": "^9",
     "@fastify/rate-limit": "^10",
-    "@myapp/types": "workspace:*",
+    "@tracks/types": "workspace:*",
     "@sentry/node": "^9",
     "@supabase/supabase-js": "^2",
     "bullmq": "^5",
@@ -27,7 +27,7 @@
     "zod": "^3"
   },
   "devDependencies": {
-    "@myapp/config": "workspace:*",
+    "@tracks/config": "workspace:*",
     "tsx": "^4",
     "typescript": "^5",
     "vitest": "^3"

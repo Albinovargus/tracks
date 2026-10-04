@@ -1,5 +1,5 @@
 {
-  "name": "@myapp/root",
+  "name": "@tracks/root",
   "private": true,
   "packageManager": "pnpm@9.15.4",
   "engines": {
@@ -11,9 +11,9 @@
     "typecheck": "turbo typecheck",
     "lint": "turbo lint",
     "test": "turbo test",
-    "cap:sync": "pnpm --filter @myapp/web exec cap sync",
-    "cap:add:ios": "pnpm --filter @myapp/web exec cap add ios",
-    "cap:add:android": "pnpm --filter @myapp/web exec cap add android",
+    "cap:sync": "pnpm --filter @tracks/web exec cap sync",
+    "cap:add:ios": "pnpm --filter @tracks/web exec cap add ios",
+    "cap:add:android": "pnpm --filter @tracks/web exec cap add android",
     "init:project": "npx tsx scripts/init.ts"
   },
   "devDependencies": {

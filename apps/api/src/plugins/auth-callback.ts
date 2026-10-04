@@ -1,5 +1,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { UserProfileSchema, ApiSuccessSchema } from '@myapp/types';
+import { UserProfileSchema, ApiSuccessSchema } from '@tracks/types';
 import * as usersService from '../services/users.service.js';
 import { enqueue as enqueueWelcomeEmail } from '../jobs/send-welcome-email.job.js';
 

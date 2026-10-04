@@ -30,7 +30,7 @@ Creates a new feature following the three-file pattern.
 
 1. Create Zod schemas in `packages/types/src/<name>.schema.ts`
 2. Add re-exports to `packages/types/src/index.ts`
-3. Build types: `pnpm --filter @myapp/types build`
+3. Build types: `pnpm --filter @tracks/types build`
 4. Create service in `apps/api/src/services/<name>.service.ts`
 5. Create plugin in `apps/api/src/plugins/<name>.ts` with `fastify.authenticate` preHandler + Zod validation
 6. Register plugin in `apps/api/src/app.ts` (import + `await app.register()`)

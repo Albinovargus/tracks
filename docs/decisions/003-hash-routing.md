@@ -16,6 +16,6 @@ Use `createHashRouter` (data mode) exclusively. Never use `createBrowserRouter` 
 4. **Deployment simplicity** — Hash routing requires no server-side catch-all rewrite. Works on any static hosting (Vercel, S3, Capacitor).
 
 ## Consequences
-- URLs contain `#` (e.g., `https://app.myapp.com/#/dashboard`) — minor aesthetic trade-off
+- URLs contain `#` (e.g., `https://app.tracks.com/#/dashboard`) — minor aesthetic trade-off
 - No SSR — acceptable for apps behind authentication (no SEO needed for app routes)
 - Deep linking on mobile works via Capacitor's App plugin + hash parsing

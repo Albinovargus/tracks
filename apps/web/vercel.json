@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && pnpm --filter @myapp/web build",
+  "buildCommand": "cd ../.. && pnpm --filter @tracks/web build",
   "outputDirectory": "dist",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "framework": null,

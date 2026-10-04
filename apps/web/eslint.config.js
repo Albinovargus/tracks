@@ -1,4 +1,4 @@
-import baseConfig, { createSupabaseBan } from '@myapp/config/eslint.config.base';
+import baseConfig, { createSupabaseBan } from '@tracks/config/eslint.config.base';
 
 export default [
   ...baseConfig,

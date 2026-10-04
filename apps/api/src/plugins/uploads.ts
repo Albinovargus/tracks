@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { ApiSuccessSchema, ApiErrorSchema, UploadResultSchema } from '@myapp/types';
+import { ApiSuccessSchema, ApiErrorSchema, UploadResultSchema } from '@tracks/types';
 import * as uploadService from '../services/upload.service.js';
 
 const BucketSchema = z.enum(['avatars']).default('avatars');

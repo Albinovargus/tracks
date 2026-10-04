@@ -1,4 +1,4 @@
-# @myapp/types
+# @tracks/types
 
 Shared Zod schemas and derived TypeScript types.
 
@@ -13,9 +13,9 @@ Shared Zod schemas and derived TypeScript types.
 ## Commands
 
 ```bash
-pnpm --filter @myapp/types build      # Compile to dist/
-pnpm --filter @myapp/types typecheck   # Check types without emitting
-pnpm --filter @myapp/types watch       # Watch mode for development
+pnpm --filter @tracks/types build      # Compile to dist/
+pnpm --filter @tracks/types typecheck   # Check types without emitting
+pnpm --filter @tracks/types watch       # Watch mode for development
 ```
 
 ## Adding a New Schema

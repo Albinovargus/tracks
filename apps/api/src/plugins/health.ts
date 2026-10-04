@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { ApiSuccessSchema } from '@myapp/types';
+import { ApiSuccessSchema } from '@tracks/types';
 
 const HealthDataSchema = z.object({
   status: z.literal('ok'),

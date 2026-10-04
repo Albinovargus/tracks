@@ -17,8 +17,8 @@ COPY packages/config/ packages/config/
 COPY apps/api/ apps/api/
 
 # Build
-RUN pnpm --filter @myapp/types build
-RUN pnpm --filter @myapp/api build
+RUN pnpm --filter @tracks/types build
+RUN pnpm --filter @tracks/api build
 
 # Production stage
 FROM node:22-slim AS production

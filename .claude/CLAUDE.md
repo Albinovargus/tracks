@@ -34,7 +34,7 @@ pnpm cap:add:android  # Add Android platform
 5. **File uploads** — All through Fastify proxy → Supabase Storage. Never direct from frontend.
 
 ### Capacitor & Mobile-First
-6. **Plugin installs** — All @capacitor/* in apps/web only: `pnpm --filter @myapp/web add`
+6. **Plugin installs** — All @capacitor/* in apps/web only: `pnpm --filter @tracks/web add`
 7. **cap CLI** — Never from root. Use workspace scripts: cap:sync, cap:add:ios, cap:add:android
 8. **webDir parity** — vite.config.ts build.outDir and capacitor.config.ts webDir must both be "dist"
 9. **Native URL** — Capacitor.isNativePlatform() in api.ts for URL switching. Never hardcode localhost.
@@ -97,4 +97,4 @@ See `docs/decisions/` for rationale:
 - `003-hash-routing.md` — Why createHashRouter for Capacitor
 - `004-deployment-targets.md` — Why GitHub Pages + Railway (via Actions), graduation paths
 
-## Scope: @myapp
+## Scope: @tracks

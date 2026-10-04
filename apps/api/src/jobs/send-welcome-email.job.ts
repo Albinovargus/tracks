@@ -1,5 +1,5 @@
 import type { Job } from 'bullmq';
-import type { WelcomeEmailJobData } from '@myapp/types';
+import type { WelcomeEmailJobData } from '@tracks/types';
 import { getWelcomeEmailQueue, WELCOME_EMAIL_QUEUE } from './queues.js';
 import { sendWelcomeEmail } from '../emails/welcome.email.js';
 

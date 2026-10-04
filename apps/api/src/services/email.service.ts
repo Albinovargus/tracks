@@ -17,7 +17,7 @@ export async function sendEmail(options: {
   }
 
   const { error } = await resend.emails.send({
-    from: 'MyApp <noreply@myapp.com>',
+    from: 'Tracks <noreply@tracks.com>',
     ...options,
   });
 

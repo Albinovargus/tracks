@@ -46,7 +46,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm --filter @myapp/api build
+      - run: pnpm --filter @tracks/api build
 
       - run: npm install -g @railway/cli
 
@@ -75,7 +75,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm --filter @myapp/web build
+      - run: pnpm --filter @tracks/web build
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
