@@ -9,3 +9,4 @@ android/
 supabase/.temp/
 *.tsbuildinfo
 .DS_Store
+.superpowers/
