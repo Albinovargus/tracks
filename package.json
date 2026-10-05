@@ -11,6 +11,7 @@
     "typecheck": "turbo typecheck",
     "lint": "turbo lint",
     "test": "turbo test",
+    "test:db": "supabase test db",
     "cap:sync": "pnpm --filter @tracks/web exec cap sync",
     "cap:add:ios": "pnpm --filter @tracks/web exec cap add ios",
     "cap:add:android": "pnpm --filter @tracks/web exec cap add android",
