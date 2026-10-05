@@ -152,7 +152,7 @@ describe("RoomScene", () => {
     resize(1);
     flushFrame(16);
     expect(ctx.clearRect).toHaveBeenCalledTimes(1);
-    expect(ctx.drawImage).toHaveBeenCalledTimes(10);
+    expect(ctx.drawImage).toHaveBeenCalledTimes(9);
     expect(drawAvatar).toHaveBeenLastCalledWith(
       ctx,
       AVATAR_SHEETS,

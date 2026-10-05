@@ -19,7 +19,10 @@ export interface PlacedSprite {
 }
 
 export interface RoomLayout {
-  /** Draw order: background, frame, trophies, medals, plant, treadmill. */
+  /**
+   * Draw order: background, frame, trophies, medals, decor (only when the room
+   * has one), treadmill.
+   */
   sprites: PlacedSprite[];
   /** Where the avatar cell's anchor pixel (32, 63) goes, in room pixels. */
   avatarFeet: { x: number; y: number };
@@ -101,7 +104,9 @@ export function layoutRoom(
       ...room.medals.map((id, i) =>
         place(id, slot(`medal-${i + 1}`), "hanging", registry),
       ),
-      place(room.decor, slot("decor"), "standing", registry),
+      ...(room.decor === undefined
+        ? []
+        : [place(room.decor, slot("decor"), "standing", registry)]),
       treadmill,
     ],
     avatarFeet: {

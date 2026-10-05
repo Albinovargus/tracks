@@ -6,7 +6,8 @@ export interface SampleRoom {
   medals: SheetId[];
   frame: SheetId;
   equipment: SheetId;
-  decor: SheetId;
+  /** Optional: with no decor item, the background's decor slot stays empty. */
+  decor?: SheetId;
 }
 
 export const SAMPLE_ROOM: SampleRoom = {
@@ -14,5 +15,4 @@ export const SAMPLE_ROOM: SampleRoom = {
   medals: ["medal-gold", "medal-silver", "medal-bronze"],
   frame: "frame-bib",
   equipment: "treadmill",
-  decor: "plant",
 };

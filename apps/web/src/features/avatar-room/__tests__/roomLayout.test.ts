@@ -10,13 +10,16 @@ import {
   slice,
 } from "./roomFixtures.js";
 
+/** SAMPLE_ROOM with the fixture plant in its decor slot. */
+const WITH_DECOR: SampleRoom = { ...SAMPLE_ROOM, decor: "plant" };
+
 function placed(sprites: PlacedSprite[], id: string): PlacedSprite | undefined {
   return sprites.find((s) => s.sheet === id);
 }
 
 describe("layoutRoom", () => {
   it("lists sprites in draw order: background, frame, trophies, medals, plant, treadmill", () => {
-    const { sprites } = layoutRoom(SAMPLE_ROOM, roomRegistry());
+    const { sprites } = layoutRoom(WITH_DECOR, roomRegistry());
     expect(sprites.map((s) => s.sheet)).toEqual([
       "background",
       "frame-bib",
@@ -45,7 +48,7 @@ describe("layoutRoom", () => {
   });
 
   it("stands trophies, the plant and the treadmill bottom-centered on their slice bottom edge", () => {
-    const { sprites } = layoutRoom(SAMPLE_ROOM, roomRegistry());
+    const { sprites } = layoutRoom(WITH_DECOR, roomRegistry());
     // trophy-1 is (10, 20) 16x18 and trophy-gold is 10x14: x = 10 + (16 - 10) / 2, y = 20 + 18 - 14
     expect(placed(sprites, "trophy-gold")).toMatchObject({ x: 13, y: 24 });
     // An odd leftover rounds down: x = 30 + floor((16 - 9) / 2)
@@ -77,7 +80,7 @@ describe("layoutRoom", () => {
 
   it("fills slots in order from the room contents", () => {
     const room: SampleRoom = {
-      ...SAMPLE_ROOM,
+      ...WITH_DECOR,
       trophies: ["trophy-bronze"],
       medals: [],
     };
@@ -91,6 +94,23 @@ describe("layoutRoom", () => {
     ]);
     // trophy-bronze (8x10) now stands in trophy-1, (10, 20) 16x18
     expect(placed(sprites, "trophy-bronze")).toMatchObject({ x: 14, y: 28 });
+  });
+
+  it("leaves the decor slot empty when the room has no decor", () => {
+    const room: SampleRoom = {
+      trophies: ["trophy-gold"],
+      medals: ["medal-gold"],
+      frame: "frame-bib",
+      equipment: "treadmill",
+    };
+    const { sprites } = layoutRoom(room, roomRegistry());
+    expect(sprites.map((s) => s.sheet)).toEqual([
+      "background",
+      "frame-bib",
+      "trophy-gold",
+      "medal-gold",
+      "treadmill",
+    ]);
   });
 
   it("throws naming the slice when the background lacks a slot", () => {
@@ -138,7 +158,7 @@ describe("layoutRoom", () => {
 
 describe("spriteFrame", () => {
   const registry = roomRegistry();
-  const { sprites } = layoutRoom(SAMPLE_ROOM, registry);
+  const { sprites } = layoutRoom(WITH_DECOR, registry);
   const plant = placed(sprites, "plant");
   const treadmill = placed(sprites, "treadmill");
   if (!plant || !treadmill)
