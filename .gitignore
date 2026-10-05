@@ -10,3 +10,4 @@ supabase/.temp/
 *.tsbuildinfo
 .DS_Store
 .superpowers/
+.playwright-mcp/
