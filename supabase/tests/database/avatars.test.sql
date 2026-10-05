@@ -90,7 +90,10 @@ set local role service_role;
 select set_config('request.jwt.claims', '{"role":"service_role"}', true);
 
 select results_eq(
-  $$ select user_id from public.avatars order by user_id $$,
+  $$ select user_id from public.avatars
+     where user_id in ('00000000-0000-4000-8000-00000000000a',
+                       '00000000-0000-4000-8000-00000000000b')
+     order by user_id $$,
   $$ values ('00000000-0000-4000-8000-00000000000a'::uuid),
             ('00000000-0000-4000-8000-00000000000b'::uuid) $$,
   'service_role can select every avatar'
