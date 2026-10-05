@@ -40,14 +40,17 @@ export async function getById(id: string) {
 export async function findByUserId(userId: string) {
   const { data, error } = await supabase.from('table').select('*').eq('user_id', userId).maybeSingle();
   if (error) throw error;
-  return data; // null → the plugin replies 404 (declare 404: ApiErrorSchema in schema.response)
+  return data; // null → the plugin decides: a declared 404, or 200 with data: null
 }
 ```
 
 Use `.single()` only when a missing row is a bug. With no row it errors with
 PGRST116, which the global error handler turns into a 500. For optional rows
-(for example `getByUserId` in `services/avatar.service.ts`), use `.maybeSingle()`
-and map `null` to a 404 in the plugin.
+(for example `getByUserId` in `services/avatar.service.ts`), use `.maybeSingle()`.
+If "no row" is a normal state of the caller's own data, answer 200 with
+`data: null` (schema `ApiSuccessSchema(XSchema.nullable())`), as `GET /avatar`
+does: browsers log every non-2xx as a console error. Otherwise reply 404 and
+declare `404: ApiErrorSchema` in `schema.response`.
 
 ## Hooks
 

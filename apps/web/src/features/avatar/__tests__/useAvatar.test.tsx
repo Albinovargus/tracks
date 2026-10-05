@@ -11,12 +11,7 @@ vi.mock('../../../lib/api.js', () => ({
 
 import { api } from '../../../lib/api.js';
 import { useAuthStore } from '../../../store/auth.store.js';
-import {
-  avatarQueryKey,
-  isAvatarNotFound,
-  useAvatar,
-  useSaveAvatar,
-} from '../useAvatar.js';
+import { avatarQueryKey, useAvatar, useSaveAvatar } from '../useAvatar.js';
 
 const get = vi.mocked(api.get);
 const put = vi.mocked(api.put);
@@ -50,10 +45,8 @@ const AVATAR_A: Avatar = {
   updated_at: '2026-10-04T12:00:00+00:00',
 };
 
-const NOT_FOUND = {
-  success: false,
-  error: { code: 'AVATAR_NOT_FOUND', message: 'Avatar not found' },
-};
+// GET /avatar's answer for a user who has not created an avatar yet.
+const NO_AVATAR = { success: true, data: null };
 const UNKNOWN = {
   success: false,
   error: { code: 'UNKNOWN', message: 'Not Found' },
@@ -86,17 +79,6 @@ describe('avatarQueryKey', () => {
   });
 });
 
-describe('isAvatarNotFound', () => {
-  it('is true only for an ApiError envelope with code AVATAR_NOT_FOUND', () => {
-    expect(isAvatarNotFound(NOT_FOUND)).toBe(true);
-    expect(isAvatarNotFound(UNKNOWN)).toBe(false);
-    expect(isAvatarNotFound(new TypeError('Failed to fetch'))).toBe(false);
-    expect(isAvatarNotFound({ code: 'AVATAR_NOT_FOUND' })).toBe(false);
-    expect(isAvatarNotFound('AVATAR_NOT_FOUND')).toBe(false);
-    expect(isAvatarNotFound(null)).toBe(false);
-  });
-});
-
 describe('useAvatar', () => {
   it('returns the unwrapped avatar from GET /avatar', async () => {
     get.mockResolvedValue({ success: true, data: AVATAR_A });
@@ -111,8 +93,8 @@ describe('useAvatar', () => {
     expect(client.getQueryData(avatarQueryKey(USER_A.id))).toEqual(AVATAR_A);
   });
 
-  it('resolves to null (a success, not an error) for AVATAR_NOT_FOUND', async () => {
-    get.mockRejectedValue(NOT_FOUND);
+  it('resolves to null (a success, not an error) when the user has no avatar', async () => {
+    get.mockResolvedValue(NO_AVATAR);
     useAuthStore.setState({ user: USER_A });
 
     const { result } = renderHook(() => useAvatar(), { wrapper });
@@ -168,7 +150,7 @@ describe('useAvatar', () => {
   it('refetches under the new key when a different user signs in', async () => {
     get
       .mockResolvedValueOnce({ success: true, data: AVATAR_A })
-      .mockRejectedValueOnce(NOT_FOUND);
+      .mockResolvedValueOnce(NO_AVATAR);
     useAuthStore.setState({ user: USER_A });
 
     const { result } = renderHook(() => useAvatar(), { wrapper });
@@ -188,7 +170,7 @@ describe('useAvatar', () => {
 
 describe('useSaveAvatar', () => {
   it("PUTs the appearance and writes the saved avatar into the user's cache without another GET", async () => {
-    get.mockRejectedValue(NOT_FOUND);
+    get.mockResolvedValue(NO_AVATAR);
     put.mockResolvedValue({ success: true, data: AVATAR_A });
     useAuthStore.setState({ user: USER_A });
 
@@ -215,7 +197,7 @@ describe('useSaveAvatar', () => {
       success: false,
       error: { code: 'FST_ERR_VALIDATION', message: 'body/top must be equal to one of the allowed values' },
     };
-    get.mockRejectedValue(NOT_FOUND);
+    get.mockResolvedValue(NO_AVATAR);
     put.mockRejectedValue(saveError);
     useAuthStore.setState({ user: USER_A });
 

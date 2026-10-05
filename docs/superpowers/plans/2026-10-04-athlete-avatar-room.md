@@ -17,6 +17,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-04-athlete-avatar-room-design.md` (read it with this plan).
 
+> **Superseded after Task 19 (Task 19b):** `GET /avatar` with no row now answers 200 `{ success: true, data: null }` (schema `ApiSuccessSchema(AvatarSchema.nullable())`), not 404 `AVATAR_NOT_FOUND`, so first-time users get no console error (.claude/CLAUDE.md rule 26). `isAvatarNotFound` was removed; `useAvatar` returns `res.data`. The 404 / `AVATAR_NOT_FOUND` text in Tasks 4, 9, 10, 11, 12 and 19 below is the historical plan; the spec has the current contract.
+
 ## Global Constraints
 
 ### Branch and commits

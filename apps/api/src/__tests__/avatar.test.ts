@@ -55,7 +55,7 @@ describe('/avatar', () => {
   });
 
   describe('GET /avatar', () => {
-    it('returns 404 AVATAR_NOT_FOUND when the user has no avatar', async () => {
+    it('returns 200 with null data when the user has no avatar', async () => {
       getByUserId.mockResolvedValueOnce(null);
       const token = await createTestToken();
 
@@ -65,11 +65,8 @@ describe('/avatar', () => {
         headers: { authorization: `Bearer ${token}` },
       });
 
-      expect(response.statusCode).toBe(404);
-      const body = response.json();
-      expect(body.success).toBe(false);
-      expect(body.error.code).toBe('AVATAR_NOT_FOUND');
-      expect(body.error.message).toBe('Avatar not found');
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({ success: true, data: null });
       expect(getByUserId).toHaveBeenCalledWith(TEST_USER_ID);
     });
 

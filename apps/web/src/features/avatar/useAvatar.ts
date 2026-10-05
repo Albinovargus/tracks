@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
-import { ApiErrorSchema } from '@tracks/types';
 import type { ApiSuccess, Avatar, AvatarAppearance } from '@tracks/types';
 import { api } from '../../lib/api.js';
 import { useAuthStore } from '../../store/auth.store.js';
@@ -16,33 +15,19 @@ export function avatarQueryKey(
 }
 
 /**
- * True only when a value thrown by api.ts is the API's "no avatar yet" error.
- * Classifies by error code, never by HTTP status: api.ts does not expose the
- * status, and a static host's HTML 404 arrives as code UNKNOWN, which must
- * stay an error.
- */
-export function isAvatarNotFound(err: unknown): boolean {
-  const parsed = ApiErrorSchema.safeParse(err);
-  return parsed.success && parsed.data.error.code === 'AVATAR_NOT_FOUND';
-}
-
-/**
- * The signed-in user's avatar. Resolves to null (a success, so it is neither
- * retried nor reported to Sentry) when the user has not created one yet.
- * Every other failure is rethrown and surfaces as the query's error.
+ * The signed-in user's avatar, or null when the user has not created one yet
+ * (GET /avatar answers 200 with null data, so "no avatar" is a success that is
+ * neither retried nor reported to Sentry). Every failure, including a static
+ * host's HTML 404 (thrown by api.ts as code UNKNOWN), surfaces as the query's
+ * error. Never classify by HTTP status: api.ts does not expose it.
  */
 export function useAvatar(): UseQueryResult<Avatar | null> {
   const user = useAuthStore((s) => s.user);
   return useQuery({
     queryKey: avatarQueryKey(user?.id),
     queryFn: async (): Promise<Avatar | null> => {
-      try {
-        const res = await api.get<ApiSuccess<Avatar>>('/avatar');
-        return res.data;
-      } catch (err) {
-        if (isAvatarNotFound(err)) return null;
-        throw err;
-      }
+      const res = await api.get<ApiSuccess<Avatar | null>>('/avatar');
+      return res.data;
     },
     enabled: !!user,
   });

@@ -68,10 +68,8 @@ const FOUND_EDITED = {
   success: true,
   data: { ...AVATAR, ...EDITED, updated_at: "2026-10-04T13:00:00+00:00" },
 };
-const NOT_FOUND = {
-  success: false,
-  error: { code: "AVATAR_NOT_FOUND", message: "Avatar not found" },
-};
+// GET /avatar's answer for a user who has not created an avatar yet.
+const NO_AVATAR = { success: true, data: null };
 // What api.ts throws for GitHub Pages' HTML 404 while the API is unhosted.
 const PAGES_404 = {
   success: false,
@@ -175,7 +173,7 @@ describe("RoomPage", () => {
   });
 
   it("replaces the room with the creator when the user has no avatar", async () => {
-    get.mockRejectedValue(NOT_FOUND);
+    get.mockResolvedValue(NO_AVATAR);
     const { router } = renderRoom();
 
     expect(
@@ -223,7 +221,7 @@ describe("RoomPage", () => {
   });
 
   it("refetches for a new user and redirects when that user has no avatar", async () => {
-    get.mockResolvedValueOnce(FOUND).mockRejectedValueOnce(NOT_FOUND);
+    get.mockResolvedValueOnce(FOUND).mockResolvedValueOnce(NO_AVATAR);
     const { router } = renderRoom();
     expect(
       await screen.findByRole("img", { name: describeAppearance(APPEARANCE) }),

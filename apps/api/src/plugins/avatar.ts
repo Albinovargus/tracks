@@ -11,16 +11,12 @@ const avatarPlugin: FastifyPluginAsyncZod = async function (fastify) {
   fastify.get('/avatar', {
     preHandler: [fastify.authenticate],
     schema: {
-      response: { 200: ApiSuccessSchema(AvatarSchema), 404: ApiErrorSchema },
+      response: { 200: ApiSuccessSchema(AvatarSchema.nullable()) },
     },
-  }, async (request, reply) => {
+  }, async (request) => {
+    // A user with no avatar yet gets 200 with null data, not a 404: browsers
+    // log every non-2xx response as a console error, and every new user hits this.
     const avatar = await avatarService.getByUserId(request.user.id);
-    if (!avatar) {
-      return reply.code(404).send({
-        success: false,
-        error: { code: 'AVATAR_NOT_FOUND', message: 'Avatar not found' },
-      });
-    }
     return { success: true as const, data: avatar };
   });
 

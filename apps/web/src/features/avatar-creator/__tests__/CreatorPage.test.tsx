@@ -60,10 +60,8 @@ const FIELD_OPTIONS: Record<keyof AvatarAppearance, Record<string, { label: stri
   shoes: SHOES_OPTIONS,
 };
 
-const NOT_FOUND = {
-  success: false,
-  error: { code: 'AVATAR_NOT_FOUND', message: 'Avatar not found' },
-};
+// GET /avatar's answer for a user who has not created an avatar yet.
+const NO_AVATAR = { success: true, data: null };
 
 const EDIT_APPEARANCE: AvatarAppearance = {
   skin_tone: 'tone-4',
@@ -100,7 +98,7 @@ function renderCreator(): QueryClient {
 }
 
 async function renderNewUser(): Promise<QueryClient> {
-  get.mockRejectedValue(NOT_FOUND);
+  get.mockResolvedValue(NO_AVATAR);
   const queryClient = renderCreator();
   await screen.findByRole('group', { name: 'Skin tone' });
   return queryClient;
@@ -383,7 +381,7 @@ describe('CreatorPage', () => {
       failure: { success: false, error: { code: 'UNKNOWN', message: 'Not Found' } },
     },
   ])("shows Can't reach the server for $cause, and Retry refetches", async ({ failure }) => {
-    get.mockRejectedValueOnce(failure).mockRejectedValueOnce(NOT_FOUND);
+    get.mockRejectedValueOnce(failure).mockResolvedValueOnce(NO_AVATAR);
     renderCreator();
 
     const alert = await screen.findByRole('alert');

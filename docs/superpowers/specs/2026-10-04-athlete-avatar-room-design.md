@@ -229,11 +229,12 @@ routes use `preHandler: [fastify.authenticate]`. `user_id` always comes from
 
 | Route | Behavior | `schema.response` |
 |-------|----------|-------------------|
-| `GET /avatar` | 200 `ApiSuccess<Avatar>`. No row → `reply.code(404).send({ success: false, error: { code: 'AVATAR_NOT_FOUND', message: 'Avatar not found' } })` | `200: ApiSuccessSchema(AvatarSchema)`, `404: ApiErrorSchema` |
+| `GET /avatar` | 200 `ApiSuccess<Avatar>`. No row → 200 `{ success: true, data: null }` | `200: ApiSuccessSchema(AvatarSchema.nullable())` (no 404) |
 | `PUT /avatar` | Body `AvatarAppearance` (all six fields, replaced together) → upsert → 200 `ApiSuccess<Avatar>`. Invalid body → 400 `ApiError`, code `FST_ERR_VALIDATION` | `200: ApiSuccessSchema(AvatarSchema)`, `400: ApiErrorSchema` |
 
-Declaring 404 is required: Fastify's typed `reply.code()` rejects undeclared
-codes (same pattern as `plugins/uploads.ts` declaring 400).
+"No avatar yet" is a success, not a 404: browsers log every non-2xx response
+as a console error, and every first-time user would produce one (.claude/CLAUDE.md
+rule 26).
 
 `avatar.service.ts`:
 - `getByUserId(userId): Promise<Avatar | null>` runs
@@ -439,10 +440,10 @@ idle (4–8 s, front-idle)
   and adds an `onAuthStateChange` subscription. `useAvatar` uses
   `queryKey: ['avatar', user?.id]` with `enabled: !!user`, so a different user
   signing in on the same device refetches.
-- Its queryFn returns the unwrapped `Avatar`, or `null` when the thrown value
-  parses as `ApiErrorSchema` with `error.code === 'AVATAR_NOT_FOUND'`. Anything
-  else is rethrown. "No avatar yet" is therefore a success: it is not retried and
-  not reported to Sentry.
+- Its queryFn calls `api.get<ApiSuccess<Avatar | null>>('/avatar')` and returns
+  `res.data`: the `Avatar`, or `null` when the API answers `data: null`. There is
+  no catch; every thrown value is the query's error. "No avatar yet" is therefore
+  a success: it is not retried and not reported to Sentry.
 - **Never classify by HTTP status.** api.ts doesn't expose it, and the Pages
   build (`VITE_API_BASE_URL` empty while the API is unhosted) gets GitHub Pages'
   HTML 404 for `/avatar`, which api.ts throws as code `UNKNOWN`.
@@ -572,8 +573,8 @@ The runtime swap matches exact RGB, so:
   - Schemas accept valid appearances.
   - They reject unknown IDs and missing fields.
 - **api** (service mocked, like existing tests):
-  - `GET /avatar`: `getByUserId` resolving null → 404 with `success: false` and
-    `error.code === 'AVATAR_NOT_FOUND'`; resolving an Avatar → 200.
+  - `GET /avatar`: `getByUserId` resolving null → 200 with
+    `{ success: true, data: null }`; resolving an Avatar → 200.
   - `PUT /avatar`: `upsertForUser` is called with the test token's user id and the
     parsed body, and the route returns 200.
   - Invalid IDs → 400 with `success: false` and
@@ -655,13 +656,12 @@ The runtime swap matches exact RGB, so:
     `<Outlet />` as soon as `isLoading` is false, redirecting to `/login` only in
     an effect. So the index RoomPage mounts once, and without a provider
     `useAvatar`'s `useQuery` throws "No QueryClient set" (.claude/CLAUDE.md rule 26).
-  - Room: an Avatar → the room; a rejection
-    `{ success: false, error: { code: 'AVATAR_NOT_FOUND', message } }` →
+  - Room: an Avatar → the room; `{ success: true, data: null }` →
     `/create`; `new TypeError('Failed to fetch')` and
     `{ success: false, error: { code: 'UNKNOWN', message: 'Not Found' } }` → the
     unreachable state, with no redirect.
   - Room as user A with an avatar, then `useAuthStore.setState({ user: userB })`
-    → a new GET runs and B's not-found redirects to `/create`.
+    → a new GET runs and B's `data: null` redirects to `/create`.
   - Creator: a new user starts from `DEFAULT_APPEARANCE`; edit mode prefills;
     Cancel returns without saving; Save navigates; a failed save keeps the
     choices and shows the error.
