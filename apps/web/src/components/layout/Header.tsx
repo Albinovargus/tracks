@@ -9,7 +9,7 @@ export function Header() {
       <div />
       <div className="flex items-center gap-4">
         <span className="text-sm text-muted-foreground">{user?.email}</span>
-        <Button variant="ghost" size="sm" onClick={() => signOut()}>
+        <Button variant="ghost" onClick={() => signOut()}>
           Sign out
         </Button>
       </div>
