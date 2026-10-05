@@ -29,12 +29,25 @@ export default somePlugin;
 ```typescript
 import { supabase } from '../lib/supabase.js';
 
+// The row must exist: .single() errors when it does not.
 export async function getById(id: string) {
   const { data, error } = await supabase.from('table').select('*').eq('id', id).single();
   if (error) throw error;
   return data;
 }
+
+// The row may not exist: .maybeSingle() resolves null instead of erroring.
+export async function findByUserId(userId: string) {
+  const { data, error } = await supabase.from('table').select('*').eq('user_id', userId).maybeSingle();
+  if (error) throw error;
+  return data; // null → the plugin replies 404 (declare 404: ApiErrorSchema in schema.response)
+}
 ```
+
+Use `.single()` only when a missing row is a bug. With no row it errors with
+PGRST116, which the global error handler turns into a 500. For optional rows
+(for example `getByUserId` in `services/avatar.service.ts`), use `.maybeSingle()`
+and map `null` to a 404 in the plugin.
 
 ## Hooks
 

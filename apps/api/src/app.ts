@@ -11,6 +11,7 @@ import healthPlugin from './plugins/health.js';
 import usersPlugin from './plugins/users.js';
 import uploadsPlugin from './plugins/uploads.js';
 import authCallbackPlugin from './plugins/auth-callback.js';
+import avatarPlugin from './plugins/avatar.js';
 import { startEmailWorkers } from './workers/email.worker.js';
 import { closeAllQueues } from './jobs/queues.js';
 
@@ -73,6 +74,7 @@ export async function build(opts: { logger?: boolean } = {}) {
   await app.register(usersPlugin);
   await app.register(uploadsPlugin);
   await app.register(authCallbackPlugin);
+  await app.register(avatarPlugin);
 
   // 10. Start background job workers
   const workers = startEmailWorkers();
