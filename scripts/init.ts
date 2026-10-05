@@ -52,7 +52,6 @@ const TARGET_FILES = [
   // Web source
   'apps/web/index.html',
   'apps/web/capacitor.config.ts',
-  'apps/web/src/pages/DashboardPage.tsx',
   'apps/web/src/components/layout/Sidebar.tsx',
   // Supabase
   'supabase/config.toml',

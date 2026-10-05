@@ -1,7 +1,8 @@
 import { createHashRouter } from 'react-router';
 import { AppShell } from './components/layout/AppShell.js';
 import { LoginPage } from './pages/LoginPage.js';
-import { DashboardPage } from './pages/DashboardPage.js';
+import { RoomPage } from './features/avatar-room/RoomPage.js';
+import { CreatorPage } from './features/avatar-creator/CreatorPage.js';
 
 export const router = createHashRouter([
   {
@@ -14,7 +15,11 @@ export const router = createHashRouter([
     children: [
       {
         index: true,
-        element: <DashboardPage />,
+        element: <RoomPage />,
+      },
+      {
+        path: 'create',
+        element: <CreatorPage />,
       },
     ],
   },

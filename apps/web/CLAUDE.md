@@ -9,6 +9,8 @@ src/features/<name>/
   index.ts       → Public API (barrel export)
 ```
 
+Small features may keep flat modules directly in `src/features/<name>/`, with tests in `__tests__/`. The `components/`, `hooks/` and `index.ts` barrel layout is for larger features.
+
 ## Key Rules
 
 - **Mobile-first**: Design for 375px first, then scale up. Every layout, modal, form, and interaction must feel native on a phone. No horizontal scroll, no clipped text, no unreachable controls.

@@ -691,7 +691,6 @@ src/
 │   ├── layout/             AppShell, Header, Sidebar
 │   └── ErrorBoundary.tsx
 ├── pages/
-│   ├── DashboardPage.tsx
 │   └── LoginPage.tsx
 ├── hooks/                  Custom hooks
 │   ├── useAuth.ts
