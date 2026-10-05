@@ -15,7 +15,8 @@
     "cap:sync": "pnpm --filter @tracks/web exec cap sync",
     "cap:add:ios": "pnpm --filter @tracks/web exec cap add ios",
     "cap:add:android": "pnpm --filter @tracks/web exec cap add android",
-    "init:project": "npx tsx scripts/init.ts"
+    "init:project": "npx tsx scripts/init.ts",
+    "art:export": "npx tsx scripts/export-art.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
