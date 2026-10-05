@@ -29,3 +29,25 @@ export function swapKey(swap: Swap | null): string {
     .map(([from, to]) => `${hex6(from)}:${hex6(to)}`)
     .join(',');
 }
+
+/**
+ * Returns a recolored copy of an RGBA buffer (ImageData layout). Every fully
+ * opaque pixel (alpha 255) has its packed 0xRRGGBB looked up in `swap` and
+ * replaced when found; other pixels are copied as-is. Alpha is never changed
+ * and the input is not mutated. The result is ArrayBuffer-backed, so it can go
+ * straight into `new ImageData(result, w, h)`.
+ */
+export function swapPixels(rgba: Uint8ClampedArray, swap: Swap): Uint8ClampedArray<ArrayBuffer> {
+  const out = new Uint8ClampedArray(rgba);
+  if (swap.size === 0) return out;
+  for (let i = 0; i + 3 < out.length; i += 4) {
+    if (out[i + 3] !== 255) continue;
+    const rgb = ((out[i] ?? 0) << 16) | ((out[i + 1] ?? 0) << 8) | (out[i + 2] ?? 0);
+    const to = swap.get(rgb);
+    if (to === undefined) continue;
+    out[i] = (to >> 16) & 0xff;
+    out[i + 1] = (to >> 8) & 0xff;
+    out[i + 2] = to & 0xff;
+  }
+  return out;
+}
