@@ -1,8 +1,8 @@
 # Athlete Avatar & Room — Design (v1)
 
 **Date:** 2026-10-04
-**Status:** Approved in brainstorming; revised after written-spec review. The Open
-Questions at the end are pending user confirmation.
+**Status:** Approved in brainstorming. Revised after the written-spec review, with
+the user's decisions recorded at the end. Awaiting final spec approval.
 
 ## Purpose
 
@@ -51,9 +51,8 @@ The room has **slots**, not free placement. Slot positions come from the art
 | Equipment | Exercise equipment | `treadmill` |
 | Decor | Decor items | `plant` |
 
-**Avatar position** (default, pending user confirmation): the avatar never leaves
-the treadmill. It idles front-facing on the stopped belt, then stands and runs in
-profile on the same spot. Side frames face right (+x), and the treadmill's console
+**Avatar position:** the avatar never leaves the treadmill. It idles front-facing
+on the stopped belt, turns (¾ frame), then runs in profile on the same spot. Side frames face right (+x), and the treadmill's console
 is at its right end. Nothing is drawn in front of the avatar in v1.
 
 ### Scale
@@ -65,7 +64,7 @@ is at its right end. Nothing is drawn in front of the avatar in v1.
   - Pixel 7 (412 px, DPR 2.625): 6 → about 411 CSS px.
   - Desktop 1280×800 at DPR 1 (1024 px beside the sidebar): 5 → 900 CSS px.
 - **Avatar:** about 48 px from sole to crown, not counting hair volume. Every
-  avatar frame uses a shared **64×64 cell** (default, pending user confirmation).
+  avatar frame uses a shared **64×64 cell**.
   - The cell is a hard bound: body, every hairstyle, the run bob and future
     headwear stay inside it. The crown sits around y ≈ 15.
   - Ground row y = 63: soles touch it in contact frames and lift above it in
@@ -78,10 +77,14 @@ is at its right end. Nothing is drawn in front of the avatar in v1.
 | Tag | View | Frames | Use |
 |-----|------|--------|-----|
 | `front-idle` | front | ~4–6: breathing, one blink per loop (loop ≈ 2–4 s) | Creator preview (frame 0, static), room idle |
-| `side-stand` | side | 1 | Standing in profile; transition between idle and run (default, pending user confirmation) |
+| `turn` | ¾ (front-right) | 1 | Transition both ways between idle and run |
 | `side-run` | side | ~8 | Treadmill run cycle |
 
-- Every avatar layer and future item needs only front and side drawings.
+- Every avatar layer and every future item needs **three drawings: front, ¾
+  (the single `turn` frame) and side**. This was the user's choice: a smoother
+  transition was judged worth one extra drawing per item.
+- The `turn` frame keeps the same anchor (32, 63), and its hip column sits at
+  x = 32 like the other views.
 - `body.aseprite` is the timing reference. Every other avatar layer file has the
   same tags with identical `from`/`to`, direction and per-frame durations.
 - All tags play `forward`; pingpong and reverse are not used. Any ease-back is
@@ -211,6 +214,9 @@ create trigger set_updated_at
 - **Validation:** allowed values are enforced only by the API's Zod schemas, not
   database enums or CHECK constraints. This is safe because the API is the only
   writer. Adding an option changes only the catalog.
+- **`user_profiles` grant fix** (separate migration, pre-existing gap with the
+  same cause): `grant select, insert, update, delete on table public.user_profiles to service_role;`.
+  Its existing RLS policies and trigger are unchanged.
 - **Catalog IDs are append-only.** Never rename or remove an ID unless a migration
   first rewrites the rows that store it. Responses are validated against the same
   enums, so a stale stored ID makes `GET /avatar` fail with 500.
@@ -401,18 +407,18 @@ items. Nothing above changes shape.
 
 ```
 idle (4–8 s, front-idle)
-  → side-stand (1 frame)
+  → turn (1 frame)
   → run (8–15 s, side-run + treadmill belt)
-  → side-stand
+  → turn
   → idle
 ```
 
 - `step(state, dtMs, rng, timings): BehaviorState` is pure: it reads no clock and
   sets no timers. `rng: () => number` returns values in [0, 1) and is injected.
   `timings` comes from `body.json`: the `front-idle` and `side-run` loop lengths
-  and the `side-stand` frame duration.
+  and the `turn` frame duration.
 - It starts in idle. Durations are drawn on entry: idle `4000 + rng()·4000` ms,
-  run `8000 + rng()·7000` ms. `side-stand` lasts its exported frame duration.
+  run `8000 + rng()·7000` ms. `turn` lasts its exported frame duration.
 - When the idle or run duration has elapsed, the switch happens at the end of the
   current tag loop, so a run never cuts on a flight frame.
 - `frameAt(tagFrames, msInState)` picks the looping frame index from the
@@ -549,7 +555,7 @@ The runtime swap matches exact RGB, so:
 - MCP `set_tag` frame numbers are 1-based; exported JSON `from`/`to` are 0-based.
 - Checkpoints go to the user with SendUserFile: palette and body, hair, clothing,
   animations, room. Stills are `export_frame` at 8×; animations (`front-idle`,
-  `side-stand`, `side-run`, `belt`) are `export_tag` GIFs at 8×.
+  `turn`, `side-run`, `belt`) are `export_tag` GIFs at 8×.
 - **GUI edits happen between MCP edits, not during them.** Each MCP call reads the
   file from disk and saves it back, and Aseprite doesn't reload a file changed on
   disk. So the user saves and closes a file before Claude edits it through the
@@ -592,6 +598,8 @@ The runtime swap matches exact RGB, so:
   - As `authenticated` with `request.jwt.claims` sub = A: select, insert and
     update on public.avatars all throw 42501, including on A's own row.
   - As `anon`: select throws 42501.
+  - `has_table_privilege('service_role', 'public.user_profiles', 'select')` and
+    `'update'` are both true (covers the grant fix).
   - As `service_role`: select works, and `insert … on conflict (user_id) do update`
     changes A's `hair_style`, keeps `created_at` at 2000-01-01 and moves
     `updated_at` forward.
@@ -622,7 +630,7 @@ The runtime swap matches exact RGB, so:
     - Every avatar sheet's frames are 64×64, with no opaque pixel on row 0
       (catches clipping).
     - Every avatar sheet (body, hair-*, top-*, bottom-*, shoes-*) has the tags
-      `front-idle`, `side-stand` and `side-run`, and the same frame count,
+      `front-idle`, `turn` and `side-run`, and the same frame count,
       `frames[].duration` and `meta.frameTags` (name, from, to, direction) as
       body.json. Every direction is `forward`.
     - `treadmill.json` has a `belt` tag with the same frame count and per-frame
@@ -659,7 +667,7 @@ The runtime swap matches exact RGB, so:
     choices and shows the error.
   - After Edit → Save, without a reload, the room renders the saved appearance
     without another GET, and reopening Edit prefills it.
-- **e2e** (Playwright, local only; default, pending user confirmation):
+- **e2e** (Playwright, local only; see Decisions):
   - Needs the README local stack: `supabase start`, `docker compose up -d`, and
     both `.env` files filled in. `e2e/avatar.spec.ts` starts with
     `test.skip(!!process.env['CI'], 'needs local Supabase + Redis')`.
@@ -673,7 +681,7 @@ The runtime swap matches exact RGB, so:
     `#/create` → Edit avatar → each group's checked radio has the recorded value
     → change the hair color → save → reload shows the new color (covers the
     update path).
-- **CI Playwright step** (OQ4 default): ci.yml gains one step directly before
+- **CI Playwright step**: ci.yml gains one step directly before
   `pnpm exec playwright test`:
   `run: grep -v '^REDIS_URL=' apps/api/.env.example > apps/api/.env && cp apps/web/.env.example apps/web/.env`
   - Without the files, the API dev server (`tsx watch --env-file=.env`) exits
@@ -699,7 +707,7 @@ The runtime swap matches exact RGB, so:
 2. In CI: typecheck, lint, test, build and ci.yml's Playwright step
    (`auth.spec.ts`, booted by the CI Playwright step above) pass. Locally, after
    `supabase db reset`: `pnpm test:db` and the full Playwright suite pass
-   (default, pending user confirmation; see Open Questions).
+   (see Decisions).
 3. Art is committed as `.aseprite` sources plus exports. On a clean tree,
    `pnpm art:export` leaves `git status --porcelain art apps/web/src/assets/sprites`
    empty.
@@ -708,38 +716,15 @@ The runtime swap matches exact RGB, so:
    checked on the staging Pages deploy.
 5. The user has approved the creator, room and animation captures.
 
-## Open Questions
+## Decisions (user, 2026-10-04)
 
-The spec is written with each recommended default, marked "(default, pending user
-confirmation)".
-
-1. **Avatar cell size.** A ~48 px figure fills a 48×48 cell, leaving no headroom
-   for hair volume, the run bob or future headwear. **Default: a 64×64 cell** with
-   a ~48 px figure (sole to crown), anchor (32, 63). Alternatives: keep 48×48 with
-   the figure at most 44 px including hair, or use 48×56.
-2. **The ¾ `turn` tag.** A ¾ drawing in every layer means every current and
-   future item needs three views, against the approved "two views per item".
-   **Default: replace it with a 1-frame `side-stand`** (profile standing pose,
-   reusable for future activities). Alternatives: keep ¾ and accept three views
-   per item, or hard-cut between `front-idle` and `side-run`.
-3. **Where the avatar stands.** Walking is out of scope, so idling anywhere but
-   the treadmill makes the avatar jump at each transition. **Default: it stays on
-   the treadmill deck in every state, side frames face right, and the console is
-   at the treadmill's right end** (as in the mockup). Alternative: idle on the
-   floor beside the treadmill, which needs a walk or a visible cut.
-4. **Where e2e runs.** The avatar e2e needs local Supabase and Redis, and CI's
-   existing Playwright step can't boot today (CI has no `.env` files, so the API
-   web server exits before any test runs). **Default: local only.**
-   `avatar.spec.ts` skips when `CI` is set, and one ci.yml step (§5 CI
-   Playwright step) creates both `.env` files from `.env.example`, minus
-   `REDIS_URL`, so the stack-free `auth.spec.ts` runs in CI. Alternative: full
-   CI, adding `supabase start`, a Redis service and generated `.env` files to
-   ci.yml.
-5. **Related, pre-existing: `user_profiles` grants.** Migration
-   `20260312060909_create_users_profile.sql` creates `public.user_profiles` with
-   no explicit grant, and deploy-staging and deploy-production run
-   `supabase db push --linked`. Wherever it is applied under the new no-auto-grant
-   default (§2 Grants), `users.service.ts`'s service-role queries fail with 42501,
-   just as `avatars` would. It is outside this feature. **Default: the user
-   decides before implementation**, either a separate follow-up grant migration
-   or adding that migration on this branch.
+1. **Avatar cell:** 64×64, with a ~48 px figure (sole to crown) and anchor
+   (32, 63).
+2. **Transition:** keep the ¾ `turn` frame. Every current and future item is
+   drawn in three views: front, ¾ and side.
+3. **Idle spot:** the avatar stays on the treadmill deck in every state. Side
+   frames face right, and the console is at the treadmill's right end.
+4. **E2E:** local only. `avatar.spec.ts` skips in CI, and CI's Playwright step is
+   repaired so `auth.spec.ts` runs there.
+5. **`user_profiles` grants:** fixed on this branch with its own migration (§2
+   Database), per .claude/CLAUDE.md rule 26.
