@@ -31,7 +31,7 @@ describe('parseGpl', () => {
   });
 
   it('tolerates CRLF line endings and a byte-order mark', () => {
-    const text = '﻿GIMP Palette\r\n#\r\n 10  20  30\tUntitled\r\n 40  50  60\tUntitled\r\n';
+    const text = '\uFEFFGIMP Palette\r\n#\r\n 10  20  30\tUntitled\r\n 40  50  60\tUntitled\r\n';
     expect(parseGpl(text)).toEqual([0x0a141e, 0x28323c]);
   });
 

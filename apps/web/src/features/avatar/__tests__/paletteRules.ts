@@ -29,7 +29,7 @@ function maxChannelDiff(a: number, b: number): number {
  * Aseprite's loader silently drops them.
  */
 export function parseGpl(text: string): number[] {
-  const lines = text.replace(/^﻿/, '').split(/\r?\n/);
+  const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/);
   if (lines[0]?.trim() !== 'GIMP Palette') {
     throw new Error('Not a GIMP palette: the first line must be "GIMP Palette"');
   }
