@@ -17,6 +17,10 @@
     },
     "test": {
       "dependsOn": ["^build"]
+    },
+    "@tracks/web#test": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/art/palette.gpl"]
     }
   }
 }
