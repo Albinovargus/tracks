@@ -1,0 +1,3 @@
+# turbo rewrites its AGENTS.md block with LF line endings (see AGENTS.md).
+# Checking the file out as LF keeps it byte-identical, so git status stays clean.
+AGENTS.md text eol=lf
