@@ -312,13 +312,13 @@ items. Nothing above changes shape.
   - **Pickers:** one native `<fieldset>` with a `<legend>` per field ('Skin tone',
     'Hair style', 'Hair color', 'Top', 'Bottom', 'Shoes').
     - Each option is an `<input type="radio">` whose `value` is the item ID,
-      inside a `relative size-11` `<label>` that also holds the swatch or text.
+      inside a `relative` `<label>` (`size-11` for swatch options, `h-11 min-w-11` for text options such as hair styles) that also holds the swatch or text.
       Its accessible name is the catalog label.
     - The input is hidden with `peer absolute inset-0 m-0 cursor-pointer opacity-0`,
       covering the label, so it stays the hit target for taps and for
       Playwright's `check()`. Never use `sr-only`: a clipped input can't be hit,
       and `check()` times out.
-    - Tap area `size-11`. The checked option shows a visible ring or check
+    - Tap area at least 44×44 px (`size-11` swatches, `h-11 min-w-11` text). The checked option shows a visible ring or check
       (`peer-checked:`), and keyboard focus shows a ring (`peer-focus-visible:`),
       so selection is not shown by color alone.
     - Options sit in `flex flex-wrap gap-2`, never a horizontal scroller.
