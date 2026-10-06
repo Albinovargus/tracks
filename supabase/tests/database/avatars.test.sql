@@ -2,7 +2,10 @@
 -- Local only (not part of pnpm test): supabase db reset && pnpm test:db
 
 begin;
+-- supabase test db installs pgtap first, so hide the "already exists, skipping" NOTICE
+set local client_min_messages = warning;
 create extension if not exists pgtap with schema extensions;
+reset client_min_messages;
 
 select plan(12);
 
