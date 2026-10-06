@@ -1,9 +1,13 @@
 # Art
 
 Pixel art for the athlete avatar and the room: the Aseprite sources, the tools that
-draw and check them, and how to extend both. The full rules are in the design spec,
-`docs/superpowers/specs/2026-10-04-athlete-avatar-room-design.md` (§1 Art, §3 Room
-composition, §4 Art Pipeline).
+draw and check them, and how to extend both. The full rules are in two design specs:
+
+- `docs/superpowers/specs/2026-10-04-athlete-avatar-room-design.md` (v1): §1 Art and
+  §4 Art Pipeline.
+- `docs/superpowers/specs/2026-10-06-room-world-design.md` (room world): §2 The world
+  and the art model (places, the dollhouse cutaway, grounding) and §3 Camera, rendering
+  and hotspots. These supersede v1 §3 "Room composition".
 
 ## Pipeline
 
