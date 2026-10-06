@@ -83,7 +83,8 @@ control `min-h-11` (44 px).
   left-side `Sheet` with the Tracks title, the nav links, the user's email and Sign out.
 - **Top-right — Edit avatar.** Still a `<Link to="/create">` named "Edit avatar" (the
   e2e selector depends on it).
-- **Bottom-center — place dots.** `<nav aria-label="Places">` with one `<button>` per
+- **Bottom-center — place dots** (rendered by RoomScene, which owns the scroller and
+  the layout; they appear once the room has drawn). `<nav aria-label="Places">` with one `<button>` per
   place, named by the place's `label`, `aria-current="true"` on the place whose center
   is nearest the viewport center. A small visible dot sits inside a 44×44 target.
   Tapping scrolls smoothly to that place's centered position.
@@ -92,7 +93,7 @@ control `min-h-11` (44 px).
 
 ### Shared pieces (no drift between Sidebar and Sheet)
 
-- `navItems` moves from `Sidebar.tsx` to `components/layout/navItems.ts`; Sidebar and
+- `navItems` and the link list move from `Sidebar.tsx` to `components/layout/NavLinks.tsx`; Sidebar and
   the menu Sheet both render it.
 - The email + Sign out block becomes `components/layout/AccountControls.tsx` (email
   truncates, Sign out keeps its 44 px target); Header and the Sheet both render it.
@@ -186,9 +187,10 @@ interface WorldLayout {
 ```
 
 - Places are laid out left to right from x = 0.
-- **Draw order:** each place background left to right, then every place's items in
-  slot order (frame, trophies, medals, decor, equipment), then the avatar (drawn by
-  RoomScene, as in v1). Nothing is drawn in front of the avatar.
+- **Draw order:** every place background left to right, then each place's items in
+  its `items` order, places left to right, then the avatar (drawn by RoomScene, as in
+  v1). `WORLD` lists items in v1 order (frame, trophies, medals, decor, equipment).
+  Nothing is drawn in front of the avatar.
 - **Alignment** is decided by slot kind, as in v1: `trophy-*`, `equipment`, `decor`
   stand (bottom-center on the slice's bottom edge); `medal-*`, `frame` hang
   (top-center on the slice's top edge). An odd leftover rounds left.
@@ -280,19 +282,18 @@ Returns `{ scrollerRef, canvasRef, view, generation, cameraRef }`, where
 - The paint key becomes `generation|camX|tag|frameOffset`; the existing rAF loop
   picks up camera changes, so scrolling needs no extra loop.
 - The canvas keeps `role="img"`, the `describeAppearance` label and `data-ready`.
-- The v1 deferred finding is fixed while here: after a draw failure, the redraw hook
-  no longer retries or re-reports on later resizes.
 
 ### Hotspots
 
-- Each `layoutWorld` hotspot renders a transparent `<button>` in the track at
+- Each `layoutWorld` hotspot renders a transparent control in the track at
   `left = x·k/dpr`, `top = (y·k − camY)/dpr`, size `w·k/dpr × h·k/dpr` CSS px, grown
   evenly about its center to at least 44×44. It scrolls with the art for free.
 - Visuals: no fill at rest, a `focus-visible` ring, a light tint while pressed.
 - `HOTSPOT_ACTIONS: Record<HotspotId, { label: string; to: string }>`; the mirror is
-  `{ label: 'Mirror: edit avatar', to: '/create' }`. The button's accessible name is
-  the label; activating it navigates. The medal shelf picker (next iteration) widens
-  the action type to also open a picker.
+  `{ label: 'Mirror: edit avatar', to: '/create' }`. A route action renders a
+  `<Link>` (it navigates, so it is a link) whose accessible name is the label. The
+  medal shelf picker (next iteration) widens the action type with a picker action,
+  which renders a `<button>`.
 - Hotspots render only once the room has drawn (`data-ready`), so they never float
   over a blank or failed canvas.
 
@@ -330,8 +331,10 @@ Returns `{ scrollerRef, canvasRef, view, generation, cameraRef }`, where
 - `useWorldCanvas` with a mocked ResizeObserver and matchMedia (the `usePixelCanvas`
   test style): backing size, k, camY, generation bumps, unchanged callbacks are no-ops.
 - RoomPage: the Menu sheet shows the email and Sign out, and Sign out signs out; the
-  Edit avatar link; the mirror button goes to `/create`; place dots set `aria-current`
-  and scroll; the chrome is present in the loading, error and failure states.
+  Edit avatar link; the chrome is present in the loading, error and failure states.
+- RoomScene: the camera transform and culling; the mirror link goes to `/create`;
+  hotspots and dots appear only once the room has drawn; place dots set
+  `aria-current` and scroll.
 - `RequireAuth`: the loading screen and the `/login` redirect (moved from the AppShell
   tests). AppShell on `/create` keeps the Header, Sidebar nav and the 375 px email
   truncation.
@@ -356,8 +359,8 @@ Returns `{ scrollerRef, canvasRef, view, generation, cameraRef }`, where
 
 | Area | Files |
 |------|-------|
-| Routing / shell | `router.tsx`, new `components/layout/RequireAuth.tsx`, `AppShell.tsx`, `Header.tsx`, `Sidebar.tsx`, new `navItems.ts`, new `AccountControls.tsx` |
-| Room | `RoomPage.tsx`, `RoomScene.tsx`, new `useWorldCanvas.ts`, new `RoomChrome.tsx`, new `world.ts` (replaces `sampleRoom.ts`), `roomLayout.ts` (`layoutWorld`), new `camera.ts` (`cameraX`, start/re-anchor, `shouldSnap`) |
+| Routing / shell | `router.tsx`, new `components/layout/RequireAuth.tsx`, `AppShell.tsx`, `Header.tsx`, `Sidebar.tsx`, new `NavLinks.tsx`, new `AccountControls.tsx` |
+| Room | `RoomPage.tsx`, `RoomScene.tsx`, new `useWorldCanvas.ts`, new `RoomChrome.tsx`, new `world.ts` (replaces `sampleRoom.ts`), `roomLayout.ts` (`layoutWorld`), new `camera.ts` (`cameraX`, start/re-anchor, `shouldSnap`), new `PlaceDots.tsx` |
 | Shared avatar | `avatar/fitScale.ts` (`coverScale`), `avatar/__tests__/sheetRules.ts` |
 | Art | `art/room/place-*.aseprite`, `art/tools/room/place-*.lua`, `world-preview.lua`, `prelude.lua`; delete `background.*` and `preview.lua`; `art/README.md` |
 | Exports | `apps/web/src/assets/sprites/place-*.png/json`; delete `background.png/json` |
