@@ -3,7 +3,7 @@
 --   local P = dofile(ROOT .. "/art/tools/lib/paths.lua")
 -- Aseprite's dofile needs an absolute path, so ROOT is the one value a caller sets.
 if type(ROOT) ~= "string" or ROOT == "" then
-  error('set ROOT = "<repo root>" (for example "D:/Projects/Tracks") before dofile')
+  error('set ROOT = "<repo root>" (the absolute repo path, forward slashes) before dofile')
 end
 
 local P = {}

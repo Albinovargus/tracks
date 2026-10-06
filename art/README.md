@@ -33,7 +33,7 @@ other paths from it through `lib/paths.lua`:
 
 ```
 run_lua_script(filename = "<ROOT>/art/avatar/body.aseprite",   -- only for tools that use the open sprite
-  script = 'ROOT = "D:/Projects/Tracks"; dofile(ROOT .. "/art/tools/body/dump-body.lua")')
+  script = 'ROOT = "<repo root>"; dofile(ROOT .. "/art/tools/body/dump-body.lua")')
 ```
 
 Node tools (`.mjs`, `.mts`) find the repo from their own location; run them from
