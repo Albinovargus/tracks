@@ -645,6 +645,17 @@ describe("RoomScene", () => {
     expect(scroller).toHaveClass("snap-x", "snap-mandatory");
   });
 
+  it("snaps to a point at each place's center, so a place wider than the screen can't swallow a swipe", async () => {
+    await mountScene(APPEARANCE);
+    show(VIEW_PART, 1); // s = 2
+    const track = screen.getByRole("img", { hidden: true }).parentElement;
+    if (!track) throw new Error("no track");
+    const markers = [...track.querySelectorAll<HTMLElement>(".snap-center")];
+    // Fixture place centers 20, 90, 190, 270, 320 art px, times s.
+    expect(markers.map((m) => m.style.left)).toEqual(["40px", "180px", "380px", "540px", "640px"]);
+    for (const marker of markers) expect(marker).toHaveClass("w-0");
+  });
+
   it("makes the track as wide as the world at the current scale", async () => {
     await mountScene(APPEARANCE);
     show(VIEW_PART, 1);

@@ -348,11 +348,13 @@ function RoomCanvas({
           />
           {view &&
             art?.layout.places.map((place) => (
+              // A point, not the place's span: a snap area wider than the screen lets
+              // the scroller rest anywhere inside it, so one swipe might not move a place.
               <div
                 key={place.id}
                 aria-hidden
-                className="pointer-events-none absolute top-0 h-full snap-center"
-                style={{ left: `${place.x * s}px`, width: `${place.w * s}px` }}
+                className="pointer-events-none absolute top-0 h-full w-0 snap-center"
+                style={{ left: `${(place.x + place.w / 2) * s}px` }}
               />
             ))}
           {shown &&
