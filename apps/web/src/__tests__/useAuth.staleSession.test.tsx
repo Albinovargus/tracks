@@ -47,8 +47,7 @@ vi.mock('../lib/api.js', () => ({ api: { post: vi.fn() } }));
 import { RequireAuth } from '../components/layout/RequireAuth.js';
 import { LoginPage } from '../pages/LoginPage.js';
 import { useAuthStore } from '../store/auth.store.js';
-
-
+import { initAuth, resetAuthInit } from '../lib/auth-init.js';
 
 function renderApp(start = '/') {
   const router = createMemoryRouter(
@@ -64,6 +63,8 @@ function renderApp(start = '/') {
   );
   const visited: string[] = [];
   router.subscribe((state) => visited.push(state.location.pathname));
+  // What App does once per load.
+  initAuth();
   render(<RouterProvider router={router} />);
   return { router, visited };
 }
@@ -81,7 +82,10 @@ describe('useAuth with a stored session', () => {
     fake.state.stored = { access_token: 'stored', user: { id: 'u1', email: 'a@example.test' } };
     useAuthStore.setState({ session: null, user: null, isLoading: true });
   });
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    resetAuthInit();
+  });
 
   it.each([400, 401, 403, 404])(
     'signs a session the server rejects with %i out locally, once, and stays on /login',
@@ -100,14 +104,11 @@ describe('useAuth with a stored session', () => {
     },
   );
 
-  // A fast /user answer clears storage before RequireAuth reads it: one check. A slow one
-  // lets RequireAuth's useAuth start its own check first: two checks, two local sign-outs.
-  it.each([
-    { delayMs: 0, checks: 1 },
-    { delayMs: 30, checks: 2 },
-  ])(
+  // One check per app load, however slow /user answers: RequireAuth mounting while it is
+  // in flight starts no second check (it once did: two checks, two local sign-outs).
+  it.each([{ delayMs: 0 }, { delayMs: 30 }])(
     'opened at /login with a rejected session (getUser after $delayMs ms), bounces through / once and settles on /login',
-    async ({ delayMs, checks }) => {
+    async ({ delayMs }) => {
       fake.state.getUserError = { name: 'AuthApiError', status: 403, message: 'invalid JWT' };
       fake.state.getUserDelayMs = delayMs;
       const { router, visited } = renderApp('/login');
@@ -119,8 +120,8 @@ describe('useAuth with a stored session', () => {
       expect(screen.getByRole('heading', { name: 'Sign In' })).toBeInTheDocument();
       // LoginPage's INITIAL_SESSION carries the stored session to / once; RequireAuth sends it back.
       expect(visited).toEqual(['/', '/login']);
-      expect(fake.auth.getUser).toHaveBeenCalledTimes(checks);
-      expect(fake.auth.signOut).toHaveBeenCalledTimes(checks);
+      expect(fake.auth.getUser).toHaveBeenCalledTimes(1);
+      expect(fake.auth.signOut).toHaveBeenCalledTimes(1);
       expect(fake.state.stored).toBeNull();
     },
   );
