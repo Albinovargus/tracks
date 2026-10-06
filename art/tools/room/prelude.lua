@@ -97,7 +97,7 @@ function M.saveSingle(spr, img, id)
   spr:close()
 end
 
--- The world (room world spec §2): every place sprite is WORLD_H tall and draws
+-- The world (room world spec section 2): every place sprite is WORLD_H tall and draws
 -- these shared rows with M.shell, so adjacent places join without a seam. Each
 -- place is a dollhouse cutaway. Rows from the top:
 --   0..47    sky (phones crop up to ~17 rows, landscape phones ~36)
