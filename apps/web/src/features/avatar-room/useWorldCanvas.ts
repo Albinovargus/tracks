@@ -19,6 +19,16 @@ export interface WorldSize {
 const LINE_PX = 16;
 
 /**
+ * CSS px per unit of a wheel delta: pixels as they are, lines at LINE_PX, and pages
+ * (deltaMode 2) at one scroller width, the width a page of the room shows.
+ */
+function wheelUnitPx(deltaMode: number, scroller: HTMLElement): number {
+  if (deltaMode === WheelEvent.DOM_DELTA_LINE) return LINE_PX;
+  if (deltaMode === WheelEvent.DOM_DELTA_PAGE) return scroller.clientWidth;
+  return 1;
+}
+
+/**
  * Sizing and camera for the room world (room world spec §3).
  *
  * Attach `scrollerRef` to the horizontal scroller (it must take its size from its
@@ -111,7 +121,7 @@ export function useWorldCanvas(size: WorldSize | null): {
       // scrollBy, not scrollLeft +=: a snap-mandatory scroller snaps a small
       // scrollLeft change straight back, but treats scrollBy like a user scroll
       // and moves on to the next snap position in that direction.
-      scroller.scrollBy({ left: event.deltaMode === 1 ? event.deltaY * LINE_PX : event.deltaY });
+      scroller.scrollBy({ left: event.deltaY * wheelUnitPx(event.deltaMode, scroller) });
       onScroll();
     };
 

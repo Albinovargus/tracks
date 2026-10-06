@@ -277,6 +277,23 @@ describe("useWorldCanvas", () => {
     expect(scrollBy).toHaveBeenCalledTimes(2);
   });
 
+  it("turns a page-mode wheel into a scroll of whole scroller widths", () => {
+    setDpr(1);
+    render(<Probe size={WORLD} />);
+    observe(375, 667);
+    const scroller = screen.getByTestId("scroller");
+
+    const down = new WheelEvent("wheel", { deltaY: 1, deltaMode: 2, cancelable: true });
+    scroller.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(true);
+    expect(scrollBy).toHaveBeenLastCalledWith({ left: 375 });
+
+    const up = new WheelEvent("wheel", { deltaY: -2, deltaMode: 2, cancelable: true });
+    scroller.dispatchEvent(up);
+    expect(scrollBy).toHaveBeenLastCalledWith({ left: -750 });
+    expect(scrollBy).toHaveBeenCalledTimes(2);
+  });
+
   it("leaves a horizontal (trackpad) wheel to the browser", () => {
     setDpr(1);
     render(<Probe size={WORLD} />);
