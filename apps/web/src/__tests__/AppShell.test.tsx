@@ -55,4 +55,15 @@ describe('AppShell', () => {
 
     expect(screen.getByRole('button', { name: 'Sign out' })).toHaveClass('min-h-11');
   });
+
+  it('truncates a long email so Sign out stays on screen at 375px', () => {
+    renderShell();
+
+    // jsdom has no layout: the classes are what let the email shrink instead of pushing Sign out off.
+    const email = screen.getByText('a@example.com');
+    expect(email).toHaveClass('min-w-0', 'truncate');
+    expect(email).toHaveAttribute('title', 'a@example.com');
+    expect(email.parentElement).toHaveClass('min-w-0');
+    expect(screen.getByRole('button', { name: 'Sign out' })).toHaveClass('shrink-0');
+  });
 });

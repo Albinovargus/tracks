@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as Sentry from "@sentry/react";
 import type { AvatarAppearance } from "@tracks/types";
+import { Button } from "../../components/ui/button.js";
 import { describeAppearance } from "../avatar/appearance.js";
 import {
   drawAvatar,
@@ -106,12 +107,26 @@ function appearanceKey(a: AvatarAppearance): string {
 
 /** The room canvas. Its rAF loop is the app's only animation driver. */
 export function RoomScene({ appearance }: { appearance: AvatarAppearance }) {
+  // Each Retry is a fresh attempt: bumping it remounts the canvas, which loads and draws again.
+  const [attempt, setAttempt] = useState(0);
   // A new look (say, a refetch after an edit on another device) remounts the
   // canvas, so data-ready and any earlier load error never carry over to it.
-  return <RoomCanvas key={appearanceKey(appearance)} appearance={appearance} />;
+  return (
+    <RoomCanvas
+      key={`${appearanceKey(appearance)}#${attempt}`}
+      appearance={appearance}
+      onRetry={() => setAttempt((n) => n + 1)}
+    />
+  );
 }
 
-function RoomCanvas({ appearance }: { appearance: AvatarAppearance }) {
+function RoomCanvas({
+  appearance,
+  onRetry,
+}: {
+  appearance: AvatarAppearance;
+  onRetry: () => void;
+}) {
   const { stageRef, canvasRef, generation } = usePixelCanvas(ROOM_W, ROOM_H);
   const [art, setArt] = useState<RoomArt | null>(null);
   const [ready, setReady] = useState(false);
@@ -156,6 +171,8 @@ function RoomCanvas({ appearance }: { appearance: AvatarAppearance }) {
     };
     let drawnKey = "";
     let announced = false;
+    // Set by the first draw error, so later resizes neither redraw nor report it again.
+    let stopped = false;
     let frameId = 0;
 
     // Draws the current frame unless it is already on the sized canvas. Returns false on a draw error.
@@ -164,10 +181,12 @@ function RoomCanvas({ appearance }: { appearance: AvatarAppearance }) {
       // resize would wipe this frame right after data-ready announced it.
       const sizedGeneration = generationRef.current;
       const key = `${sizedGeneration}|${current.tag}|${current.frameOffset}`;
+      if (stopped) return false;
       if (sizedGeneration === 0 || key === drawnKey) return true;
       try {
         drawRoom(ctx, art, current.tag, current.frameOffset);
       } catch (error) {
+        stopped = true;
         Sentry.captureException(error);
         setFailed(true);
         return false;
@@ -216,12 +235,17 @@ function RoomCanvas({ appearance }: { appearance: AvatarAppearance }) {
       className="flex size-full min-w-0 items-center justify-center overflow-hidden"
     >
       {failed && (
-        <p
-          role="alert"
-          className="m-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive"
-        >
-          Couldn't load the room. Refresh the page to try again.
-        </p>
+        <div className="m-4 flex flex-col items-center gap-4 text-center">
+          <p
+            role="alert"
+            className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
+          >
+            Couldn't load the room.
+          </p>
+          <Button variant="secondary" onClick={onRetry}>
+            Retry
+          </Button>
+        </div>
       )}
       <canvas
         ref={canvasRef}

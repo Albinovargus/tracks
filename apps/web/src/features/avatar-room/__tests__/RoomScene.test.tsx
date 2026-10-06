@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import type { AvatarAppearance } from "@tracks/types";
 import type { LoadedSheets } from "../../avatar/canvas.js";
 import type { SheetData } from "../../avatar/sheets.js";
@@ -264,7 +271,10 @@ describe("RoomScene", () => {
     render(<RoomScene appearance={APPEARANCE} />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Couldn't load the room. Refresh the page to try again.",
+      "Couldn't load the room.",
+    );
+    expect(screen.getByRole("button", { name: "Retry" })).toHaveClass(
+      "min-h-11",
     );
     expect(captureException).toHaveBeenCalledWith(error);
     expect(roomCanvas()).not.toBeVisible();
@@ -287,6 +297,81 @@ describe("RoomScene", () => {
     expect(captureException).toHaveBeenCalledWith(error);
     expect(roomCanvas()).not.toHaveAttribute("data-ready");
     expect(pendingFrames.size).toBe(0);
+  });
+
+  it("reports a draw failure to Sentry once, however often the canvas resizes", async () => {
+    drawAvatar.mockImplementation(() => {
+      throw new Error('Sheet canvas "body|" is not loaded');
+    });
+    await mountScene(APPEARANCE);
+    resize(1);
+    flushFrame(0);
+    expect(captureException).toHaveBeenCalledTimes(1);
+
+    // Each resize or rotate moves the generation on, which used to redraw and re-report.
+    resize(2);
+    resize(3);
+    resize(4);
+    expect(captureException).toHaveBeenCalledTimes(1);
+    expect(pendingFrames.size).toBe(0);
+  });
+
+  it("loads and draws the room again on Retry after a draw failure", async () => {
+    drawAvatar.mockImplementationOnce(() => {
+      throw new Error('Sheet canvas "body|" is not loaded');
+    });
+    await mountScene(APPEARANCE);
+    resize(1);
+    flushFrame(0);
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Couldn't load the room.",
+    );
+    const retry = screen.getByRole("button", { name: "Retry" });
+    expect(retry).toHaveClass("min-h-11");
+    expect(loadAvatarSheets).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(retry);
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
+    await waitFor(() => expect(pendingFrames.size).toBe(1));
+    expect(loadAvatarSheets).toHaveBeenCalledTimes(2);
+    resize(1);
+    flushFrame(16);
+    expect(drawAvatar).toHaveBeenLastCalledWith(
+      ctx,
+      AVATAR_SHEETS,
+      APPEARANCE,
+      "front-idle",
+      0,
+      FEET_X,
+      FEET_Y,
+    );
+    expect(roomCanvas()).toBeVisible();
+    expect(roomCanvas()).toHaveAttribute("data-ready", "true");
+    expect(captureException).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports again when a retry fails again", async () => {
+    const error = new Error('Sheet canvas "body|" is not loaded');
+    drawAvatar.mockImplementation(() => {
+      throw error;
+    });
+    await mountScene(APPEARANCE);
+    resize(1);
+    flushFrame(0);
+    expect(captureException).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    await waitFor(() => expect(pendingFrames.size).toBe(1));
+    resize(1);
+    resize(2);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Couldn't load the room.",
+    );
+    expect(captureException).toHaveBeenCalledTimes(2);
+    expect(captureException).toHaveBeenLastCalledWith(error);
   });
 
   it("drops data-ready while a new appearance loads", async () => {

@@ -99,7 +99,10 @@ describe("RoomScene when a sprite sheet fails to load", () => {
       render(<RoomScene appearance={APPEARANCE} />);
 
       expect(await screen.findByRole("alert")).toHaveTextContent(
-        "Couldn't load the room. Refresh the page to try again.",
+        "Couldn't load the room.",
+      );
+      expect(screen.getByRole("button", { name: "Retry" })).toHaveClass(
+        "min-h-11",
       );
       expect(captureException).toHaveBeenCalledWith(error);
       const canvas = screen.getByRole("img", { hidden: true });
