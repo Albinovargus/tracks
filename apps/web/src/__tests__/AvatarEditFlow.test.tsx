@@ -145,10 +145,10 @@ describe('avatar edit flow', () => {
       </QueryClientProvider>,
     );
 
-    // #/ is the room, inside AppShell's <main>, full-bleed.
+    // #/ is the room: full screen, outside AppShell (no <main>).
     const room = await screen.findByTestId('room-scene');
     expect(room).toHaveAccessibleName(describeAppearance(initialAppearance));
-    expect(screen.getByRole('main').firstElementChild).not.toHaveClass('p-4');
+    expect(screen.queryByRole('main')).not.toBeInTheDocument();
     expect(api.get).toHaveBeenCalledTimes(1);
     expect(api.get).toHaveBeenCalledWith('/avatar');
 

@@ -6,6 +6,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryRouter } from "react-router";
@@ -39,6 +40,16 @@ vi.mock("../RoomScene.js", async () => {
     },
   };
 });
+
+const { signOut } = vi.hoisted(() => ({ signOut: vi.fn() }));
+vi.mock("../../../hooks/useAuth.js", () => ({
+  useAuth: () => ({
+    session: { access_token: "token-a" },
+    user: { id: "user-a", email: "a@example.com" },
+    isLoading: false,
+    signOut,
+  }),
+}));
 
 import { useAuthStore } from "../../../store/auth.store.js";
 import { describeAppearance } from "../../avatar/appearance.js";
@@ -233,5 +244,39 @@ describe("RoomPage", () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe("/create"));
     expect(get).toHaveBeenCalledTimes(2);
+  });
+
+  it("fills the screen and draws no app shell", async () => {
+    get.mockResolvedValue(FOUND);
+    renderRoom();
+    const room = await screen.findByRole("img", { name: describeAppearance(APPEARANCE) });
+    expect(room.closest(".h-\\[100dvh\\]")).not.toBeNull();
+    expect(screen.queryByRole("main")).not.toBeInTheDocument();
+    expect(screen.queryByRole("banner")).not.toBeInTheDocument();
+  });
+
+  it("opens a menu with the nav, the email and Sign out", async () => {
+    get.mockResolvedValue(FOUND);
+    renderRoom();
+    const menu = await screen.findByRole("button", { name: "Menu" });
+    expect(menu).toHaveClass("size-11");
+    fireEvent.click(menu);
+
+    const sheet = await screen.findByRole("dialog");
+    expect(within(sheet).getByRole("link", { name: "Room" })).toHaveAttribute("href", "/");
+    expect(within(sheet).getByText("a@example.com")).toHaveClass("truncate");
+    expect(within(sheet).getByRole("button", { name: "Close menu" })).toHaveClass("size-11");
+    fireEvent.click(within(sheet).getByRole("button", { name: "Sign out" }));
+    expect(signOut).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ["loading", () => get.mockReturnValue(new Promise(() => {}))],
+    ["unreachable", () => get.mockRejectedValue(new TypeError("Failed to fetch"))],
+    ["loaded", () => get.mockResolvedValue(FOUND)],
+  ])("keeps the menu (and Sign out) reachable while %s", async (_state, setup) => {
+    setup();
+    renderRoom();
+    expect(await screen.findByRole("button", { name: "Menu" })).toBeInTheDocument();
   });
 });

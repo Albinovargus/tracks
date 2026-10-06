@@ -1,9 +1,9 @@
-import { useEffect } from "react";
-import { Link, useNavigate } from "react-router";
-import { Pencil } from "lucide-react";
+import { useEffect, type ReactNode } from "react";
+import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button.js";
 import { Skeleton } from "../../components/ui/skeleton.js";
 import { useAvatar } from "../avatar/useAvatar.js";
+import { RoomChrome } from "./RoomChrome.js";
 import { RoomScene } from "./RoomScene.js";
 
 /** The main screen: the avatar in its room, or where to go when there is none. */
@@ -16,46 +16,37 @@ export function RoomPage() {
     if (hasNoAvatar) void navigate("/create", { replace: true });
   }, [hasNoAvatar, navigate]);
 
+  let content: ReactNode;
   if (!avatar && isError) {
-    return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-4 p-4 text-center">
+    content = (
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4 text-center">
         <div role="alert" className="space-y-1">
           <p className="font-medium">Can't reach the server</p>
-          <p className="text-sm text-muted-foreground">
-            Check your connection, then try again.
-          </p>
+          <p className="text-sm text-muted-foreground">Check your connection, then try again.</p>
         </div>
-        <Button
-          variant="secondary"
-          disabled={isFetching}
-          onClick={() => void refetch()}
-        >
+        <Button variant="secondary" disabled={isFetching} onClick={() => void refetch()}>
           Retry
         </Button>
       </div>
     );
+  } else if (avatar) {
+    content = (
+      <div className="absolute inset-0">
+        <RoomScene appearance={avatar} />
+      </div>
+    );
+  } else {
+    content = (
+      <Skeleton role="status" aria-label="Loading your room" className="absolute inset-0 rounded-none" />
+    );
   }
 
+  // Full-bleed: the art runs under the notch and home indicator; RoomChrome pads
+  // its controls with the safe-area insets (room world spec §1).
   return (
-    <div className="flex h-full w-full flex-col items-center">
-      <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-        {avatar ? (
-          <RoomScene appearance={avatar} />
-        ) : (
-          <Skeleton
-            role="status"
-            aria-label="Loading your room"
-            className="aspect-[3/2] max-h-full w-full"
-          />
-        )}
-      </div>
-      {avatar && (
-        <Button asChild variant="secondary" className="my-3 shrink-0">
-          <Link to="/create">
-            <Pencil /> Edit avatar
-          </Link>
-        </Button>
-      )}
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-background">
+      {content}
+      <RoomChrome showEdit={Boolean(avatar)} />
     </div>
   );
 }

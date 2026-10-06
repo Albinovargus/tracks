@@ -14,12 +14,11 @@ export const router = createHashRouter([
     path: '/',
     element: <RequireAuth />,
     children: [
+      // The room draws its own chrome over the art (room world spec §1).
+      { index: true, element: <RoomPage /> },
       {
         element: <AppShell />,
-        children: [
-          { index: true, element: <RoomPage /> },
-          { path: 'create', element: <CreatorPage /> },
-        ],
+        children: [{ path: 'create', element: <CreatorPage /> }],
       },
     ],
   },
