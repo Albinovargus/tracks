@@ -23,7 +23,7 @@ vi.mock('../components/layout/AppShell.js', async () => {
   return { AppShell: () => <Outlet /> };
 });
 
-import { routes } from '../router.js';
+import { routes } from '../routes.js';
 
 function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
