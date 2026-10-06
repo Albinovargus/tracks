@@ -190,7 +190,7 @@ describe("useWorldCanvas", () => {
     expect(scroller.scrollLeft).toBe(state().camera / view.dpr);
   });
 
-  it("moves the camera with the scroll position, clamped to the world", () => {
+  it("converts the scroll position to a whole-device-px camera", () => {
     setDpr(3);
     render(<Probe size={WORLD} />);
     observe(390, 844);
@@ -228,6 +228,37 @@ describe("useWorldCanvas", () => {
     const swipe = new WheelEvent("wheel", { deltaX: 30, deltaY: 5, cancelable: true });
     scroller.dispatchEvent(swipe);
     expect(swipe.defaultPrevented).toBe(false);
+    expect(scroller.scrollLeft).toBe(start);
+  });
+
+  it("leaves a ctrl+wheel (pinch or browser zoom) to the browser", () => {
+    setDpr(1);
+    render(<Probe size={WORLD} />);
+    observe(1280, 800);
+    const scroller = screen.getByTestId("scroller");
+    const start = scroller.scrollLeft;
+    const zoom = new WheelEvent("wheel", { deltaY: 40, ctrlKey: true, cancelable: true });
+    scroller.dispatchEvent(zoom);
+    expect(zoom.defaultPrevented).toBe(false);
+    expect(scroller.scrollLeft).toBe(start);
+  });
+
+  it("removes its listeners and disconnects the observer on unmount", () => {
+    setDpr(1);
+    const { unmount } = render(<Probe size={WORLD} />);
+    observe(1280, 800);
+    const scroller = screen.getByTestId("scroller");
+    const observer = observers[observers.length - 1];
+    const query = queries[queries.length - 1];
+    const start = scroller.scrollLeft;
+
+    unmount();
+
+    expect(observer?.disconnected).toBe(true);
+    expect(query?.removed.length).toBeGreaterThan(0);
+    const wheel = new WheelEvent("wheel", { deltaY: 40, cancelable: true });
+    scroller.dispatchEvent(wheel);
+    expect(wheel.defaultPrevented).toBe(false);
     expect(scroller.scrollLeft).toBe(start);
   });
 
