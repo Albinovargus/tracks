@@ -9,3 +9,7 @@ android/
 supabase/.temp/
 *.tsbuildinfo
 .DS_Store
+.superpowers/
+test-results/
+playwright-report/
+.playwright-mcp/

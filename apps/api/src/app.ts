@@ -11,6 +11,7 @@ import healthPlugin from './plugins/health.js';
 import usersPlugin from './plugins/users.js';
 import uploadsPlugin from './plugins/uploads.js';
 import authCallbackPlugin from './plugins/auth-callback.js';
+import avatarPlugin from './plugins/avatar.js';
 import { startEmailWorkers } from './workers/email.worker.js';
 import { closeAllQueues } from './jobs/queues.js';
 
@@ -23,12 +24,14 @@ export async function build(opts: { logger?: boolean } = {}) {
   // 2. Zod type provider
   configureZodProvider(app);
 
-  // 3. CORS — register before routes
+  // 3. CORS — register before routes. List every method a route uses:
+  //    @fastify/cors defaults to GET, HEAD and POST only.
   await app.register(cors, {
     origin: [
       'http://localhost:5173',
       process.env['FRONTEND_URL'],
     ].filter(Boolean) as string[],
+    methods: ['GET', 'HEAD', 'POST', 'PUT'],
   });
 
   // 4. Rate limiting — 100 req/min per IP, Redis-backed in production
@@ -44,18 +47,9 @@ export async function build(opts: { logger?: boolean } = {}) {
     limits: { fileSize: 10 * 1024 * 1024 },
   });
 
-  // 6. Auth plugin — decorates request.user, registers fastify.authenticate
-  await app.register(authPlugin);
-
-  // 7. Health check (no auth)
-  await app.register(healthPlugin);
-
-  // 8. Feature plugins
-  await app.register(usersPlugin);
-  await app.register(uploadsPlugin);
-  await app.register(authCallbackPlugin);
-
-  // 9. Global error handler — matches ApiErrorSchema contract
+  // 6. Global error handler — matches ApiErrorSchema contract.
+  //    Set before any route: a route keeps the handler that was active when it
+  //    was registered, so routes added earlier fall back to Fastify's default.
   app.setErrorHandler((error: { statusCode?: number; code?: string; message: string }, _request, reply) => {
     const statusCode = error.statusCode ?? 500;
     if (statusCode >= 500) {
@@ -69,6 +63,18 @@ export async function build(opts: { logger?: boolean } = {}) {
       },
     });
   });
+
+  // 7. Auth plugin — decorates request.user, registers fastify.authenticate
+  await app.register(authPlugin);
+
+  // 8. Health check (no auth)
+  await app.register(healthPlugin);
+
+  // 9. Feature plugins
+  await app.register(usersPlugin);
+  await app.register(uploadsPlugin);
+  await app.register(authCallbackPlugin);
+  await app.register(avatarPlugin);
 
   // 10. Start background job workers
   const workers = startEmailWorkers();

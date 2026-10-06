@@ -26,5 +26,22 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rolldownOptions: {
+      output: {
+        // Vendor code in its own chunks keeps every chunk under Vite's 500 kB
+        // warning, and app releases leave the cached vendor chunks valid.
+        codeSplitting: {
+          groups: [
+            {
+              name: 'react',
+              test: /node_modules[\/](react|react-dom|scheduler|react-router)[\/]/,
+              priority: 3,
+            },
+            { name: 'supabase', test: /node_modules[\/]@supabase[\/]/, priority: 2 },
+            { name: 'vendor', test: /node_modules[\/]/, priority: 1 },
+          ],
+        },
+      },
+    },
   },
 });

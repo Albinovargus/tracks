@@ -1,0 +1,58 @@
+GIMP Palette
+Name: Tracks
+Columns: 8
+#
+# Tracks art palette (spec section 1 Style, section 4 Source rules).
+# 32 fixed colors, then the 9 placeholder ramp entries (light, base, shadow).
+# Placeholders are matched by exact RGB at runtime, never by name, and must
+# equal PLACEHOLDER_RAMPS in apps/web/src/features/avatar/palette.ts.
+# Every fixed color differs from every placeholder by 32+ in some channel.
+# Every row needs a name: Aseprite skips rows without one.
+#
+# Outline and neutrals
+ 30  26  36  outline
+244 241 234  white
+200 206 216  metal light
+142 150 166  metal
+ 90  96 112  metal shadow
+ 70  74  86  belt stripe
+ 44  46  54  belt
+# Room: wall, trim, floor, wood, window (from the approved mockup)
+216 200 168  wall
+196 180 146  wall shadow
+181 158 122  trim
+140  94  60  floor
+122  80  50  floor lines
+142 104  72  wood light
+110  75  50  dark wood
+ 74  50  34  wood shadow
+214 236 248  glass light
+159 208 239  glass
+120 176 216  glass shadow
+# Trophies and medals (silver uses the metal ramp)
+246 213  92  gold light
+224 168  48  gold
+168 116  28  gold shadow
+228 160 112  bronze light
+184 112  64  bronze
+126  74  40  bronze shadow
+# Accents: ribbons, bib, treadmill console
+200  60  60  red
+140  36  44  red shadow
+ 60 100 200  blue
+ 36  60 132  blue shadow
+# Plant and pot
+124 196 100  leaf light
+ 76 154  68  leaf
+ 46 106  52  leaf shadow
+192 100  60  terracotta
+# Placeholder ramps, swapped at runtime (light, base, shadow)
+255 128 255  PH skin light
+255  64 255  PH skin base
+255   0 255  PH skin shadow
+128 255 255  PH hair light
+ 64 255 255  PH hair base
+  0 255 255  PH hair shadow
+255 255 128  PH cloth light
+255 255  64  PH cloth base
+255 255   0  PH cloth shadow

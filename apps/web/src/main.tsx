@@ -19,7 +19,9 @@ createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />
-      <ReactQueryDevtools initialIsOpen={false} />
+      <div className="hidden md:block">
+        <ReactQueryDevtools initialIsOpen={false} />
+      </div>
     </QueryClientProvider>
   </StrictMode>,
 );

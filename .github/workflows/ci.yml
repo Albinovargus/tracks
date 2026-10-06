@@ -45,4 +45,9 @@ jobs:
 
       - run: pnpm exec playwright install --with-deps
 
+      # The API dev server (tsx watch --env-file=.env) exits without apps/api/.env, so
+      # create both .env files from the examples. REDIS_URL is dropped: CI has no Redis,
+      # so rate limiting stays in memory. auth.spec.ts only needs the placeholder values.
+      - run: grep -v '^REDIS_URL=' apps/api/.env.example > apps/api/.env && cp apps/web/.env.example apps/web/.env
+
       - run: pnpm exec playwright test

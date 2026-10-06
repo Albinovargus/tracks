@@ -29,12 +29,28 @@ export default somePlugin;
 ```typescript
 import { supabase } from '../lib/supabase.js';
 
+// The row must exist: .single() errors when it does not.
 export async function getById(id: string) {
   const { data, error } = await supabase.from('table').select('*').eq('id', id).single();
   if (error) throw error;
   return data;
 }
+
+// The row may not exist: .maybeSingle() resolves null instead of erroring.
+export async function findByUserId(userId: string) {
+  const { data, error } = await supabase.from('table').select('*').eq('user_id', userId).maybeSingle();
+  if (error) throw error;
+  return data; // null → the plugin decides: a declared 404, or 200 with data: null
+}
 ```
+
+Use `.single()` only when a missing row is a bug. With no row it errors with
+PGRST116, which the global error handler turns into a 500. For optional rows
+(for example `getByUserId` in `services/avatar.service.ts`), use `.maybeSingle()`.
+If "no row" is a normal state of the caller's own data, answer 200 with
+`data: null` (schema `ApiSuccessSchema(XSchema.nullable())`), as `GET /avatar`
+does: browsers log every non-2xx as a console error. Otherwise reply 404 and
+declare `404: ApiErrorSchema` in `schema.response`.
 
 ## Hooks
 
@@ -42,7 +58,11 @@ export async function getById(id: string) {
 
 ## Registration Order (app.ts)
 
-1. Sentry → 2. Zod provider → 3. CORS → 4. Rate limit → 5. Multipart → 6. Auth plugin → 7. Health → 8. Feature plugins
+1. Sentry → 2. Zod provider → 3. CORS → 4. Rate limit → 5. Multipart → 6. Error handler → 7. Auth plugin → 8. Health → 9. Feature plugins
+
+- The error handler goes before every route. A route keeps the handler that was active when it was registered. A route added before `setErrorHandler` gets Fastify's default body, with no `success` field, and a declared `400: ApiErrorSchema` then becomes a 500 (`FST_ERR_FAILED_ERROR_SERIALIZATION`).
+- CORS lists its methods explicitly (`GET, HEAD, POST, PUT`). Add a method there before any route uses it, or the browser's preflight fails.
+- `src/__tests__/app-contract.test.ts` guards both rules.
 
 ## Forbidden
 
