@@ -110,7 +110,7 @@ colors only, one frame, exactly **270 px tall** (`WORLD_H`). Left to right:
 | `door-left` | 120 | Wall with a closed door (a future place unlocks here) | none |
 | `trophy-wall` | 130 | Trophy shelf, medal rack, bib frame | `trophy-1..3`, `medal-1..3`, `frame` |
 | `treadmill-corner` | 130 | Window, treadmill (home: the camera opens here) | `equipment` |
-| `mirror-corner` | 130 | Full-length mirror, empty decor spot | `hotspot-mirror`, `decor` |
+| `mirror-corner` | 130 | Dressing nook: full-length mirror leaning on the wall, hook rail, sneakers, mat; empty decor spot | `hotspot-mirror`, `decor` |
 | `door-right` | 120 | Wall with a closed door | none |
 
 The world is 630×270. Its size is read from the art (sum of place widths, shared
@@ -119,7 +119,22 @@ height), never from code constants. The narrowest phone view is about 117 art px
 110 px. The widths are a starting point; the art
 checkpoints may adjust them, and nothing in code depends on the exact values.
 
-- **Seams:** new `prelude.lua` helpers draw the shared wall, baseboard and floor rows
+- **Human scale — a dollhouse cutaway** (decided at Checkpoint B, 2026-10-06). The
+  first draft stretched the wall to fill the 270 px height. That made the wall about
+  5× the athlete's height ("a house for giants"). The room keeps v1's proportions
+  instead: the wall is about 84 px over a 48 px athlete. Each place is a cutaway of
+  the house, rows from the top: sky (0–47, cropped first on short screens), roof
+  (48–71), attic (72–107), ceiling slab (108–119), back wall (120–203), baseboard
+  (204–208), then the floor from 209 to the bottom. Items stand on y 231, and the
+  deep front floor leaves the place dots clear of the treadmill. It also leaves room
+  for later wandering.
+- **Grounding:** there is one light source, the window at the upper left. Every
+  object casts a contact shadow on the floor, and wall-mounted or wall-adjacent
+  objects cast a shadow on the wall. Wall-hugging objects stand at the back-wall line
+  (about y 209–212). Small props that give a place a reason are baked into the place
+  art: the mirror nook's hook rail, towel, jump rope, sneakers and mat, and the
+  treadmill's gym mat.
+- **Seams:** new `prelude.lua` helpers draw the shared sky, roof, attic, wall, baseboard and floor rows
   (same y positions, same colors, a pattern whose period divides every place width),
   so adjacent places join without a visible seam.
 - **Slots** keep their v1 names and slice semantics (sprite-local bounds; pivot relative
