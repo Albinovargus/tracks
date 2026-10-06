@@ -19,7 +19,7 @@
   "frameTags": [
   ],
   "slices": [
-   { "name": "equipment", "keys": [{ "frame": 0, "bounds": {"x": 23, "y": 212, "w": 84, "h": 50 } }] }
+   { "name": "equipment", "keys": [{ "frame": 0, "bounds": {"x": 23, "y": 182, "w": 84, "h": 50 } }] }
   ]
  }
 }

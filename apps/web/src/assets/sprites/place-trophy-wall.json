@@ -19,13 +19,13 @@
   "frameTags": [
   ],
   "slices": [
-   { "name": "trophy-1", "keys": [{ "frame": 0, "bounds": {"x": 13, "y": 80, "w": 16, "h": 20 } }] },
-   { "name": "trophy-2", "keys": [{ "frame": 0, "bounds": {"x": 32, "y": 80, "w": 16, "h": 20 } }] },
-   { "name": "trophy-3", "keys": [{ "frame": 0, "bounds": {"x": 51, "y": 80, "w": 16, "h": 20 } }] },
-   { "name": "medal-1", "keys": [{ "frame": 0, "bounds": {"x": 16, "y": 120, "w": 14, "h": 20 } }] },
-   { "name": "medal-2", "keys": [{ "frame": 0, "bounds": {"x": 33, "y": 120, "w": 14, "h": 20 } }] },
-   { "name": "medal-3", "keys": [{ "frame": 0, "bounds": {"x": 50, "y": 120, "w": 14, "h": 20 } }] },
-   { "name": "frame", "keys": [{ "frame": 0, "bounds": {"x": 83, "y": 92, "w": 36, "h": 28 } }] }
+   { "name": "trophy-1", "keys": [{ "frame": 0, "bounds": {"x": 13, "y": 132, "w": 16, "h": 20 } }] },
+   { "name": "trophy-2", "keys": [{ "frame": 0, "bounds": {"x": 32, "y": 132, "w": 16, "h": 20 } }] },
+   { "name": "trophy-3", "keys": [{ "frame": 0, "bounds": {"x": 51, "y": 132, "w": 16, "h": 20 } }] },
+   { "name": "medal-1", "keys": [{ "frame": 0, "bounds": {"x": 14, "y": 172, "w": 14, "h": 20 } }] },
+   { "name": "medal-2", "keys": [{ "frame": 0, "bounds": {"x": 33, "y": 172, "w": 14, "h": 20 } }] },
+   { "name": "medal-3", "keys": [{ "frame": 0, "bounds": {"x": 52, "y": 172, "w": 14, "h": 20 } }] },
+   { "name": "frame", "keys": [{ "frame": 0, "bounds": {"x": 83, "y": 134, "w": 36, "h": 28 } }] }
   ]
  }
 }

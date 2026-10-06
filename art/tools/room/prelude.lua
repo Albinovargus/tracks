@@ -97,44 +97,130 @@ function M.saveSingle(spr, img, id)
   spr:close()
 end
 
--- The world (room world spec ยง2): every place sprite is WORLD_H tall and draws
--- these shared rows with M.shell, so adjacent places join without a seam. A v1
--- room y maps to y + 150 here: the floor sits at the bottom of the world.
+-- The world (room world spec ง2): every place sprite is WORLD_H tall and draws
+-- these shared rows with M.shell, so adjacent places join without a seam. Each
+-- place is a dollhouse cutaway. Rows from the top:
+--   0..47    sky (phones crop up to ~17 rows, landscape phones ~36)
+--   48..71   roof: ridge, five shingle courses, eave
+--   72..107  attic, with rafters every 10 px
+--   108..119 attic floor, joists and the room's ceiling cornice
+--   120..269 the room, at v1's proportions: a v1 room y maps to y + 120
+--            (wall 120..203, baseboard 204..208). The floor runs from 209 to the
+--            bottom: v1's 31 rows, then 30 more in front of the items, where the
+--            place dots overlay sits, so nothing important goes there
 M.WORLD_H = 270
-M.BASEBOARD_Y = 234 -- trim rows 234..237, dark wood row 238
-M.FLOOR_Y = 239 -- floor rows 239..269
-M.STAND_Y = 261 -- floor items stand with their bottom row here
+M.ROOF_Y = 48 -- roof rows 48..71
+M.ATTIC_Y = 72 -- attic rows 72..107
+M.CEILING_Y = 108 -- attic floor, joists and cornice rows 108..119
+M.WALL_Y = 120 -- wall rows 120..203
+M.BASEBOARD_Y = 204 -- trim rows 204..207, dark wood row 208
+M.FLOOR_Y = 209 -- floor rows 209..269
+M.STAND_Y = 231 -- floor items stand with their bottom row here (v1's y 111 + 120)
 M.SAFE_W = 110 -- slots and hotspots stay within each place's central 110 px
-M.RAIL_Y = 154 -- chair rail rows 154..156 (trim, trim, dark wood); wainscot 157..233
 
--- Crown molding, wall, chair rail, wainscot, baseboard and floor across a place
--- w px wide. Every wall row is one color across, so place edges always match.
--- The molding is decoration only: phones crop up to ~17 rows off the top.
--- Plank ends sit at x = 10 or 30 (mod 40) by band, so with w a multiple of 10
--- columns 0 and w - 1 are always plain floor: every place's edge columns match.
+-- Calls fn(x) for every x in 0..w - 1 with x % 10 in offsets. Offsets must be
+-- 1..8: the period divides every place width and every place x, so the pattern
+-- runs on across each join, and columns 0 and w - 1 never get a pattern pixel.
+local function every10(w, offsets, fn)
+  for x0 = 0, w - 1, 10 do
+    for _, off in ipairs(offsets) do
+      if off < 1 or off > 8 then error("pattern offset " .. off .. " would touch an edge column") end
+      fn(x0 + off)
+    end
+  end
+end
+
+-- Sky, roof, attic, ceiling, wall, baseboard and floor across a place w px
+-- wide. Every row is one color across except patterns that keep off x % 10 = 0
+-- and 9 (every10, and plank ends at x = 10 or 30 mod 40), so with w a multiple
+-- of 10, columns 0 and w - 1 always match every other place's edge columns.
 function M.shell(img, w)
-  local C = M.C
-  M.rect(img, 0, 0, w, M.BASEBOARD_Y, C("wall"))
-  -- Crown molding along the top.
-  M.rect(img, 0, 0, w, 2, C("dark wood"))
-  M.rect(img, 0, 2, w, 3, C("trim"))
-  M.hline(img, 0, w - 1, 5, C("dark wood"))
-  M.hline(img, 0, w - 1, 6, C("wall shadow"))
-  -- Chair rail, then the darker wainscot down to the baseboard.
-  M.rect(img, 0, M.RAIL_Y, w, 2, C("trim"))
-  M.hline(img, 0, w - 1, M.RAIL_Y + 2, C("dark wood"))
-  M.rect(img, 0, M.RAIL_Y + 3, w, M.BASEBOARD_Y - M.RAIL_Y - 3, C("wall shadow"))
-  M.rect(img, 0, M.BASEBOARD_Y, w, 4, C("trim"))
-  M.hline(img, 0, w - 1, M.BASEBOARD_Y + 4, C("dark wood"))
-  M.rect(img, 0, M.FLOOR_Y, w, M.WORLD_H - M.FLOOR_Y, C("floor"))
-  for _, y in ipairs({ 239, 246, 254, 262 }) do M.hline(img, 0, w - 1, y, C("floor lines")) end
-  for _, band in ipairs({ { 240, 245, 30 }, { 247, 253, 10 }, { 255, 261, 30 }, { 263, 269, 10 } }) do
-    local x = band[3]
+  local C, rect, hline, vline = M.C, M.rect, M.hline, M.vline
+  local function row(y, name) hline(img, 0, w - 1, y, C(name)) end
+  local function band(y1, y2, name) rect(img, 0, y1, w, y2 - y1 + 1, C(name)) end
+
+  -- Sky, lighter toward the roof. Clouds are drawn per place (M.cloud).
+  band(0, 35, "glass")
+  band(36, M.ROOF_Y - 1, "glass light")
+
+  -- Roof: a ridge row, five 4-row shingle courses with staggered joints, the eave.
+  local R = M.ROOF_Y
+  row(R, "bronze shadow")
+  for i = 0, 4 do
+    local y = R + 1 + i * 4
+    band(y, y + 2, "terracotta")
+    row(y, "bronze light")
+    row(y + 3, "bronze shadow")
+    every10(w, { i % 2 == 0 and 3 or 8 }, function(x) vline(img, x, y + 1, y + 2, C("bronze shadow")) end)
+  end
+  band(R + 21, R + 22, "dark wood") -- fascia
+  row(R + 23, "wood shadow")
+
+  -- Attic: roof boards in shade, a shadow under the eave, rafters every 10 px
+  -- (lit left edge, shaded right edge), and a purlin across them.
+  local A = M.ATTIC_Y
+  band(A, M.CEILING_Y - 1, "dark wood")
+  band(A, A + 1, "wood shadow")
+  every10(w, { 4 }, function(x)
+    vline(img, x, A + 2, M.CEILING_Y - 1, C("wood light"))
+    vline(img, x + 1, A + 2, M.CEILING_Y - 1, C("wood shadow"))
+  end)
+  row(A + 13, "wood light")
+  row(A + 14, "wood light")
+  row(A + 15, "wood shadow")
+
+  -- Attic floor, the joists in cross-section, and the room's ceiling cornice.
+  local F = M.CEILING_Y
+  row(F, "wood light")
+  row(F + 1, "dark wood")
+  band(F + 2, F + 6, "wood shadow")
+  every10(w, { 3, 4, 5 }, function(x) vline(img, x, F + 2, F + 6, C("dark wood")) end)
+  every10(w, { 3 }, function(x) vline(img, x, F + 2, F + 6, C("wood light")) end)
+  row(F + 7, "dark wood")
+  band(F + 8, F + 10, "trim")
+  every10(w, { 2, 3, 7, 8 }, function(x) img:drawPixel(x, F + 10, C("dark wood")) end)
+  row(F + 11, "dark wood")
+
+  -- Wall (v1: a shadow band under the ceiling and above the baseboard).
+  band(M.WALL_Y, M.BASEBOARD_Y - 1, "wall")
+  band(M.WALL_Y, M.WALL_Y + 1, "wall shadow")
+  row(M.BASEBOARD_Y - 1, "wall shadow")
+
+  -- Baseboard, then the floor down to the bottom: v1's planks (+ 120), continued.
+  -- Plank ends sit at x = 10 or 30 (mod 40), never on an edge column.
+  band(M.BASEBOARD_Y, M.BASEBOARD_Y + 3, "trim")
+  row(M.BASEBOARD_Y + 4, "dark wood")
+  band(M.FLOOR_Y, M.WORLD_H - 1, "floor")
+  for _, y in ipairs({ 209, 216, 224, 232, 240, 247, 255, 262 }) do row(y, "floor lines") end
+  for _, b in ipairs({
+    { 210, 215, 30 }, { 217, 223, 10 }, { 225, 231, 30 }, { 233, 239, 10 },
+    { 241, 246, 30 }, { 248, 254, 10 }, { 256, 261, 30 }, { 263, 269, 10 },
+  }) do
+    local x = b[3]
     while x < w - 1 do
-      M.vline(img, x, band[1], band[2], C("floor lines"))
+      vline(img, x, b[1], b[2], C("floor lines"))
       x = x + 40
     end
   end
+end
+
+-- A small cloud with its top-left at (x, y): 14x6 (big) or 9x4. Places draw one
+-- or two clouds in the sky (rows 0..35), never within 10 px of an edge column.
+function M.cloud(img, x, y, big)
+  local rows = big and {
+    "....wwww......",
+    "..wwwwwwww.ww.",
+    ".wwwwwwwwwwwww",
+    "wwwwwwwwwwwwww",
+    "lllwwwwwwwwlll",
+    ".llllllllllll.",
+  } or {
+    "...www...",
+    ".wwwwwww.",
+    "wwwwwwwww",
+    ".lllllll.",
+  }
+  M.grid(img, x, y, rows, { w = "white", l = "glass light" })
 end
 
 -- A new place: an RGB sprite w x WORLD_H with layer "place", and its shell image.
