@@ -11,7 +11,6 @@ import { CLOTH_RAMPS, HAIR_RAMPS, PLACEHOLDER_RAMPS, SKIN_RAMPS } from '../palet
 import { paletteProblems, parseGpl, targetRampProblems } from './paletteRules.js';
 import {
   AVATAR_TAGS,
-  ROOM_SLOT_SLICES,
   beltProblems,
   cellProblems,
   isAvatarSheet,
@@ -27,9 +26,7 @@ import {
   type AsepriteJson,
   type RgbaImage,
 } from './sheetRules.js';
-import { layoutRoom } from '../../avatar-room/roomLayout.js';
-import { SAMPLE_ROOM, type SampleRoom } from '../../avatar-room/sampleRoom.js';
-import { WORLD } from '../../avatar-room/world.js';
+import { AVATAR_SPOT, WORLD } from '../../avatar-room/world.js';
 import {
   AVATAR_SHEET_IDS,
   BODY_SHEET,
@@ -167,41 +164,17 @@ describe('exported sheets', () => {
         });
       }
 
-      if (id === 'background') {
-        it('has every slot slice', () => {
-          expect(sliceProblems(loadSheet(id).data, ROOM_SLOT_SLICES, false)).toEqual([]);
-        });
-      }
     });
   }
 });
 
 // Catalog coverage (Task 19). Everything the app draws must resolve through the
 // SHEETS registry (import.meta.glob over src/assets/sprites), and the room art
-// must carry the slices and tags that layoutRoom and RoomScene read. The checks
+// must carry the slices and tags that layoutWorld and RoomScene read. The checks
 // above validate whatever is exported; these fail when something is not exported.
-describe('catalog and sample room coverage', () => {
-  /** Native room size (spec §1 Scale). */
-  const roomW = 180;
-  const roomH = 120;
-
-  /** background.aseprite holds one slot slice per SAMPLE_ROOM item (spec §3). */
-  function slotSlices(room: SampleRoom): string[] {
-    return [
-      ...room.trophies.map((_, i) => `trophy-${i + 1}`),
-      ...room.medals.map((_, i) => `medal-${i + 1}`),
-      'frame',
-      'equipment',
-      'decor',
-    ];
-  }
-
+describe('catalog and world coverage', () => {
   function unexported(ids: readonly SheetId[]): SheetId[] {
     return [...new Set(ids)].filter((id) => !SHEETS.has(id)).sort();
-  }
-
-  function isSheetId(id: SheetId | undefined): id is SheetId {
-    return id !== undefined;
   }
 
   it('exports every catalog base sprite and every AVATAR_SHEET_IDS sheet', () => {
@@ -218,19 +191,6 @@ describe('catalog and sample room coverage', () => {
     ).toEqual([]);
   });
 
-  it('exports the background and every SAMPLE_ROOM item', () => {
-    // The decor slot is optional: an empty slot has no sheet to export.
-    const roomSheets: SheetId[] = [
-      'background',
-      ...SAMPLE_ROOM.trophies,
-      ...SAMPLE_ROOM.medals,
-      SAMPLE_ROOM.frame,
-      SAMPLE_ROOM.equipment,
-      ...[SAMPLE_ROOM.decor].filter(isSheetId),
-    ];
-    expect(unexported(roomSheets), 'room sheets with no export in src/assets/sprites').toEqual([]);
-  });
-
   it('exports every WORLD place and item', () => {
     const worldSheets: SheetId[] = WORLD.flatMap((place) => [
       place.sheet,
@@ -239,41 +199,16 @@ describe('catalog and sample room coverage', () => {
     expect(unexported(worldSheets), 'world sheets with no export in src/assets/sprites').toEqual([]);
   });
 
-  it('gives the background a slot slice for every SAMPLE_ROOM item', () => {
-    const names = new Set(getSheet('background').slices.map((slice) => slice.name));
-    expect(
-      slotSlices(SAMPLE_ROOM).filter((name) => !names.has(name)),
-      'slot slices missing from background.json',
-    ).toEqual([]);
-  });
-
   it('gives the equipment a belt tag and a rider slice with a pivot', () => {
-    const equipment = getSheet(SAMPLE_ROOM.equipment);
+    const equipment = getSheet(
+      WORLD.find((p) => p.id === AVATAR_SPOT.place)?.items.find((i) => i.slot === AVATAR_SPOT.slot)
+        ?.sheet ?? '',
+    );
     expect(
       equipment.tags.map((tag) => tag.name),
       `${equipment.id}.json tags`,
     ).toContain('belt');
     const rider = equipment.slices.find((slice) => slice.name === 'rider');
     expect(rider?.pivot ?? null, `${equipment.id}.json rider slice pivot`).not.toBeNull();
-  });
-
-  // Plan-added, beyond the Task 19 brief. Backed by spec §1 Scale (the room is
-  // 180x120) and §3 Rendering (draw at integer art-pixel coordinates). It also
-  // runs layoutRoom once over the real exports. It does not require sprites to
-  // stay inside the room: the spec sets no such rule.
-  it('lays out the sample room on whole pixels over a 180x120 background', () => {
-    const backdrop = getSheet('background').frames[0];
-    expect(backdrop ? [backdrop.w, backdrop.h] : null, 'background.json frame 0 size').toEqual([
-      roomW,
-      roomH,
-    ]);
-    const { sprites, avatarFeet } = layoutRoom(SAMPLE_ROOM);
-    const offGrid = sprites
-      .filter((sprite) => !Number.isInteger(sprite.x) || !Number.isInteger(sprite.y))
-      .map((sprite) => `${sprite.sheet} at (${sprite.x}, ${sprite.y})`);
-    if (!Number.isInteger(avatarFeet.x) || !Number.isInteger(avatarFeet.y)) {
-      offGrid.push(`avatar feet at (${avatarFeet.x}, ${avatarFeet.y})`);
-    }
-    expect(offGrid, 'layout positions not on whole art pixels').toEqual([]);
   });
 });

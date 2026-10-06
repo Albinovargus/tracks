@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { layoutWorld, slotAlignment, type PlacedSprite } from "../roomLayout.js";
+import { layoutWorld, slotAlignment, spriteFrame, type PlacedSprite } from "../roomLayout.js";
 import { AVATAR_SPOT, WORLD, type PlaceDef } from "../world.js";
 import { BELT, MIRROR_SLICES, RIDER, roomRegistry, sheet, SHELF_SLOTS, slice } from "./roomFixtures.js";
 
@@ -149,5 +149,37 @@ describe("layoutWorld", () => {
     ["no belt tag", sheet("treadmill", 72, 40, { frames: 4, slices: [RIDER] }), "belt"],
   ])("throws when the equipment has %s", (_name, treadmill, message) => {
     expect(() => layoutWorld(WORLD, AVATAR_SPOT, roomRegistry([treadmill]))).toThrow(message);
+  });
+});
+
+describe("spriteFrame", () => {
+  const registry = roomRegistry();
+  const { sprites } = layoutWorld(
+    withPlace("mirror-corner", { items: [{ slot: "decor", sheet: "plant" }] }),
+    AVATAR_SPOT,
+    registry,
+  );
+  const plant = placed(sprites, "plant");
+  const treadmill = placed(sprites, "treadmill");
+  if (!plant || !treadmill) throw new Error("fixture layout is missing the plant or treadmill");
+
+  it("uses frame 0 for a static sprite in every state", () => {
+    const frame0 = { x: 0, y: 0, w: 14, h: 30, duration: 100 };
+    expect(spriteFrame(plant, "front-idle", 0, registry)).toEqual(frame0);
+    expect(spriteFrame(plant, "side-run", 2, registry)).toEqual(frame0);
+  });
+
+  it("draws belt frame i with side-run frame i", () => {
+    // belt offset 0 is sheet frame 1 and offset 2 is sheet frame 3
+    expect(spriteFrame(treadmill, "side-run", 0, registry)).toMatchObject({ x: 72 });
+    expect(spriteFrame(treadmill, "side-run", 2, registry)).toMatchObject({ x: 216 });
+  });
+
+  it.each(["front-idle", "turn"] as const)("shows belt frame 0 during %s", (tag) => {
+    expect(spriteFrame(treadmill, tag, 3, registry)).toMatchObject({ x: 72 });
+  });
+
+  it("throws when the run offset is past the end of the belt", () => {
+    expect(() => spriteFrame(treadmill, "side-run", 3, registry)).toThrow("belt");
   });
 });

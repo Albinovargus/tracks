@@ -17,8 +17,7 @@ import {
   type SheetId,
   type SheetSlice,
 } from '../../avatar/sheets.js';
-import { layoutRoom, layoutWorld, type RoomLayout } from '../roomLayout.js';
-import { SAMPLE_ROOM, type SampleRoom } from '../sampleRoom.js';
+import { layoutWorld } from '../roomLayout.js';
 import { WORLD } from '../world.js';
 import {
   beltMotionProblems,
@@ -34,8 +33,6 @@ import {
 
 const SPRITES_DIR = new URL('../../../assets/sprites/', import.meta.url);
 
-/** The room's native size (spec section 1 Scale). */
-const ROOM: Rect = { x: 0, y: 0, w: 180, h: 120 };
 /** The avatar cell and its anchor pixel (spec section 1 Scale). */
 const CELL = 64;
 const ANCHOR = { x: 32, y: 63 };
@@ -61,26 +58,6 @@ function load(id: SheetId): LoadedSheet {
   };
   loaded.set(id, result);
   return result;
-}
-
-/** Each background slot slice that has a SAMPLE_ROOM item, with the item
- * layoutRoom puts in it. A slot with no item (decor, when the room has none)
- * stays empty and is left out. */
-function slotItems(room: SampleRoom): Array<[slot: string, item: SheetId]> {
-  return [
-    ...room.trophies.map((id, i): [string, SheetId] => [`trophy-${i + 1}`, id]),
-    ...room.medals.map((id, i): [string, SheetId] => [`medal-${i + 1}`, id]),
-    ['frame', room.frame],
-    ['equipment', room.equipment],
-    ...(room.decor === undefined ? [] : [['decor', room.decor] as [string, SheetId]]),
-  ];
-}
-
-/** layoutRoom(SAMPLE_ROOM) on the exported sheets, after checking each is exported. */
-function sampleLayout(): RoomLayout {
-  load('background');
-  for (const [, id] of slotItems(SAMPLE_ROOM)) load(id);
-  return layoutRoom(SAMPLE_ROOM);
 }
 
 function frameRect(sheet: SheetData, index: number): Rect {
@@ -117,47 +94,6 @@ function inside(inner: Rect, outer: Rect): boolean {
 }
 
 describe('room art', () => {
-  it('has a single-frame 180x120 background with no transparent pixel', () => {
-    const { sheet, image } = load('background');
-    expect(sheet.frames).toHaveLength(1);
-    const frame = frameRect(sheet, 0);
-    expect([frame.w, frame.h]).toEqual([ROOM.w, ROOM.h]);
-    let holes = 0;
-    for (let y = 0; y < frame.h; y++) {
-      for (let x = 0; x < frame.w; x++) {
-        if (pixelAt(image, frame.x + x, frame.y + y) === -1) holes++;
-      }
-    }
-    expect(holes).toBe(0);
-  });
-
-  it('fits every v1 sample item in its slot and every placed sprite in the room', () => {
-    const background = load('background').sheet;
-    const problems: string[] = [];
-    for (const [name, id] of slotItems(SAMPLE_ROOM)) {
-      const slot = slice(background, name);
-      const item = frameRect(load(id).sheet, 0);
-      if (item.w > slot.w || item.h > slot.h) {
-        problems.push(
-          `${id} is ${item.w}x${item.h}, larger than slice ${name} (${slot.w}x${slot.h})`,
-        );
-      }
-    }
-    for (const sprite of sampleLayout().sprites) {
-      const { w, h } = frameRect(getSheet(sprite.sheet), 0);
-      if (!inside({ x: sprite.x, y: sprite.y, w, h }, ROOM)) {
-        problems.push(`${sprite.sheet} at (${sprite.x}, ${sprite.y}) reaches outside the room`);
-      }
-    }
-    expect(problems).toEqual([]);
-  });
-
-  it('stands the avatar cell on the rider pivot, inside the room', () => {
-    const feet = sampleLayout().avatarFeet;
-    const cell: Rect = { x: feet.x - ANCHOR.x, y: feet.y - ANCHOR.y, w: CELL, h: CELL };
-    expect(inside(cell, ROOM), `avatar cell ${JSON.stringify(cell)}`).toBe(true);
-  });
-
   it('has a belt under the foot point, a clear rider area and a right-end console', () => {
     const { sheet, image } = load('treadmill');
     const r = rider(sheet);

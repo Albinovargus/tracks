@@ -7,7 +7,6 @@ import {
   type SheetId,
   type SheetSlice,
 } from "../avatar/sheets.js";
-import type { SampleRoom } from "./sampleRoom.js";
 import {
   AVATAR_SPOT,
   HotspotIdSchema,
@@ -20,27 +19,16 @@ import {
 
 export interface PlacedSprite {
   sheet: SheetId;
-  /** Top-left draw position in room pixels. */
+  /** Top-left draw position in world px. */
   x: number;
   y: number;
   /** True for the equipment: it plays its `belt` tag in step with the run. */
   animated: boolean;
 }
 
-export interface RoomLayout {
-  /**
-   * Draw order: background, frame, trophies, medals, decor (only when the room
-   * has one), treadmill.
-   */
-  sprites: PlacedSprite[];
-  /** Where the avatar cell's anchor pixel (32, 63) goes, in room pixels. */
-  avatarFeet: { x: number; y: number };
-}
-
 type Registry = ReadonlyMap<SheetId, SheetData>;
 type Alignment = "standing" | "hanging";
 
-const BACKGROUND_SHEET: SheetId = "background";
 const RIDER_SLICE = "rider";
 const BELT_TAG = "belt";
 
@@ -73,55 +61,6 @@ function place(
     x: slot.x + Math.floor((slot.w - item.w) / 2),
     y: alignment === "standing" ? slot.y + slot.h - item.h : slot.y,
     animated,
-  };
-}
-
-/** Pure: positions every room sprite from the background's slot slices. */
-export function layoutRoom(
-  room: SampleRoom,
-  registry: Registry = SHEETS,
-): RoomLayout {
-  const background = getSheet(BACKGROUND_SHEET, registry);
-  const slot = (name: string): SheetSlice => findSlice(background, name);
-
-  const equipment = getSheet(room.equipment, registry);
-  if (!equipment.tags.some((t) => t.name === BELT_TAG)) {
-    throw new Error(`Sheet "${equipment.id}" has no "${BELT_TAG}" tag`);
-  }
-  const rider = findSlice(equipment, RIDER_SLICE);
-  if (!rider.pivot) {
-    throw new Error(
-      `Slice "${RIDER_SLICE}" in sheet "${equipment.id}" has no pivot`,
-    );
-  }
-
-  const treadmill = place(
-    room.equipment,
-    slot("equipment"),
-    "standing",
-    registry,
-    true,
-  );
-
-  return {
-    sprites: [
-      { sheet: BACKGROUND_SHEET, x: 0, y: 0, animated: false },
-      place(room.frame, slot("frame"), "hanging", registry),
-      ...room.trophies.map((id, i) =>
-        place(id, slot(`trophy-${i + 1}`), "standing", registry),
-      ),
-      ...room.medals.map((id, i) =>
-        place(id, slot(`medal-${i + 1}`), "hanging", registry),
-      ),
-      ...(room.decor === undefined
-        ? []
-        : [place(room.decor, slot("decor"), "standing", registry)]),
-      treadmill,
-    ],
-    avatarFeet: {
-      x: treadmill.x + rider.x + rider.pivot.x,
-      y: treadmill.y + rider.y + rider.pivot.y,
-    },
   };
 }
 

@@ -39,19 +39,6 @@ export function sheet(
   };
 }
 
-/** The background's slot slices, one per sample item. */
-export const SLOTS: SheetSlice[] = [
-  slice("trophy-1", 10, 20, 16, 18),
-  slice("trophy-2", 30, 20, 16, 18),
-  slice("trophy-3", 50, 20, 16, 18),
-  slice("medal-1", 100, 10, 12, 20),
-  slice("medal-2", 114, 10, 12, 20),
-  slice("medal-3", 128, 10, 12, 20),
-  slice("frame", 70, 12, 24, 30),
-  slice("equipment", 60, 60, 80, 50),
-  slice("decor", 150, 70, 20, 40),
-];
-
 /** Fixture place slices (place-local). The fixture world is 340x80: door-left 40,
  * trophy-wall 100, treadmill-corner 100, mirror-corner 60, door-right 40. */
 export const SHELF_SLOTS: SheetSlice[] = [
@@ -97,7 +84,6 @@ export function roomRegistry(
   overrides: SheetData[] = [],
 ): ReadonlyMap<string, SheetData> {
   const sheets = [
-    sheet("background", 180, 120, { slices: SLOTS }),
     sheet("frame-bib", 20, 26),
     sheet("trophy-gold", 10, 14),
     sheet("trophy-silver", 9, 12),

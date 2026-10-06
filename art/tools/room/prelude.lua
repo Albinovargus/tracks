@@ -1,6 +1,6 @@
 -- Shared helpers for the room scripts in art/tools/room; not run on its own.
 -- Each script loads it with: local L = dofile(ROOT .. "/art/tools/room/prelude.lua")
--- Optional global ROOM_OUT: the folder the scripts save to and preview.lua reads from
+-- Optional global ROOM_OUT: the folder the scripts save to and world-preview.lua reads from
 -- (default art/room/). Point it at a scratch folder to draw without touching the sources.
 local P = dofile(ROOT .. "/art/tools/lib/paths.lua")
 local M = {}
