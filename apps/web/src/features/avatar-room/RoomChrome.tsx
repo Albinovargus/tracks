@@ -23,7 +23,7 @@ export function RoomChrome({ showEdit }: { showEdit: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 pt-[calc(env(safe-area-inset-top)+0.75rem)] pr-[calc(env(safe-area-inset-right)+0.75rem)] pl-[calc(env(safe-area-inset-left)+0.75rem)]">
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 pt-[calc(env(safe-area-inset-top)+0.75rem)] pr-[calc(env(safe-area-inset-right)+0.75rem)] pl-[calc(env(safe-area-inset-left)+0.75rem)]">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" aria-label="Menu" className={GLASS}>

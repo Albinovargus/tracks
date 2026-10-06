@@ -151,6 +151,18 @@ describe("RoomPage", () => {
     expect(router.state.historyAction).toBe("PUSH");
   });
 
+  it("puts Menu and Edit avatar before the room in focus order", async () => {
+    get.mockResolvedValue(FOUND);
+    renderRoom();
+
+    const room = await screen.findByRole("img", { name: describeAppearance(APPEARANCE) });
+    const menu = screen.getByRole("button", { name: "Menu" });
+    const edit = screen.getByRole("link", { name: "Edit avatar" });
+    // Sequential focus follows DOM order: the top controls come first, then the world.
+    expect(menu.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(edit.compareDocumentPosition(room) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("keeps the room mounted through a background refetch and passes the new look on", async () => {
     let answer: (value: unknown) => void = () => {};
     get.mockResolvedValueOnce(FOUND).mockReturnValueOnce(

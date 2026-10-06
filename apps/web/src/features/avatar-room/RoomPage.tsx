@@ -42,11 +42,12 @@ export function RoomPage() {
   }
 
   // Full-bleed: the art runs under the notch and home indicator; RoomChrome pads
-  // its controls with the safe-area insets (room world spec §1).
+  // its controls with the safe-area insets (room world spec §1). The chrome comes
+  // first so Tab reaches Menu and Edit avatar before the room; z-10 keeps it on top.
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-background">
-      {content}
       <RoomChrome showEdit={Boolean(avatar)} />
+      {content}
     </div>
   );
 }
