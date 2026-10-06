@@ -106,12 +106,9 @@ describe('useAuth with a stored session', () => {
 
   // One check per app load, however slow /user answers: RequireAuth mounting while it is
   // in flight starts no second check (it once did: two checks, two local sign-outs).
-  it.each([
-    { delayMs: 0, checks: 1 },
-    { delayMs: 30, checks: 1 },
-  ])(
+  it.each([{ delayMs: 0 }, { delayMs: 30 }])(
     'opened at /login with a rejected session (getUser after $delayMs ms), bounces through / once and settles on /login',
-    async ({ delayMs, checks }) => {
+    async ({ delayMs }) => {
       fake.state.getUserError = { name: 'AuthApiError', status: 403, message: 'invalid JWT' };
       fake.state.getUserDelayMs = delayMs;
       const { router, visited } = renderApp('/login');
@@ -123,8 +120,8 @@ describe('useAuth with a stored session', () => {
       expect(screen.getByRole('heading', { name: 'Sign In' })).toBeInTheDocument();
       // LoginPage's INITIAL_SESSION carries the stored session to / once; RequireAuth sends it back.
       expect(visited).toEqual(['/', '/login']);
-      expect(fake.auth.getUser).toHaveBeenCalledTimes(checks);
-      expect(fake.auth.signOut).toHaveBeenCalledTimes(checks);
+      expect(fake.auth.getUser).toHaveBeenCalledTimes(1);
+      expect(fake.auth.signOut).toHaveBeenCalledTimes(1);
       expect(fake.state.stored).toBeNull();
     },
   );

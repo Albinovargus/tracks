@@ -67,6 +67,7 @@ vi.mock('../features/avatar-room/RoomScene.js', () => ({
 
 import { api } from '../lib/api.js';
 import { App } from '../App.js';
+import { router } from '../router.js';
 import { resetAuthInit } from '../lib/auth-init.js';
 import { useAuthStore } from '../store/auth.store.js';
 
@@ -84,7 +85,14 @@ const AVATAR: Avatar = {
   updated_at: '2026-10-04T12:00:00.000Z',
 };
 
-function renderApp() {
+/**
+ * Renders App at /login. The app's hash router is a singleton that outlives each test;
+ * navigating it directly (not through window.location.hash, whose hashchange lands
+ * later) means no late navigation can unmount the room mid-test.
+ */
+async function renderApp() {
+  await router.navigate('/login');
+  expect(router.state.location.pathname).toBe('/login');
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={queryClient}>
@@ -110,7 +118,6 @@ describe('the auth check', () => {
     fake.state.listeners.clear();
     fake.state.stored = { access_token: 'stored', user: { id: 'u1', email: 'a@example.com' } };
     useAuthStore.setState({ session: null, user: null, isLoading: true });
-    window.location.hash = '#/login';
   });
   afterEach(() => {
     cleanup();
@@ -118,7 +125,7 @@ describe('the auth check', () => {
   });
 
   it('runs once per app load, however often LoginPage, RequireAuth and the room menu mount', async () => {
-    renderApp();
+    await renderApp();
 
     // LoginPage, then RequireAuth, then the room.
     expect(await screen.findByRole('img', { name: 'Room' })).toBeInTheDocument();
@@ -134,7 +141,7 @@ describe('the auth check', () => {
   });
 
   it('signing out from the menu and back in updates every consumer', async () => {
-    renderApp();
+    await renderApp();
 
     expect(await screen.findByRole('img', { name: 'Room' })).toBeInTheDocument();
     const sheet = await openMenu();
