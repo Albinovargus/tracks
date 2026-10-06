@@ -22,6 +22,8 @@ let observers: FakeResizeObserver[] = [];
 let queries: FakeQuery[] = [];
 let ctx: FakeContext;
 let consoleError: MockInstance<typeof console.error>;
+// jsdom has no Element.scrollBy; the wheel handler scrolls through it (snap-safe).
+let scrollBy: ReturnType<typeof vi.fn<(options: ScrollToOptions) => void>>;
 
 class FakeResizeObserver {
   readonly callback: ResizeObserverCallback;
@@ -72,10 +74,17 @@ beforeEach(() => {
     ctx as unknown as CanvasRenderingContext2D,
   );
   consoleError = vi.spyOn(console, "error");
+  scrollBy = vi.fn<(options: ScrollToOptions) => void>();
+  Object.defineProperty(HTMLElement.prototype, "scrollBy", {
+    configurable: true,
+    writable: true,
+    value: scrollBy,
+  });
 });
 
 afterEach(() => {
   cleanup();
+  Reflect.deleteProperty(HTMLElement.prototype, "scrollBy");
   const errors = [...consoleError.mock.calls];
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -242,16 +251,18 @@ describe("useWorldCanvas", () => {
     render(<Probe size={WORLD} />);
     observe(1280, 800);
     const scroller = screen.getByTestId("scroller");
-    const start = scroller.scrollLeft;
 
+    // scrollBy, not scrollLeft +=: a snap-mandatory scroller snaps a small
+    // scrollLeft change straight back, while scrollBy is a user-like scroll.
     const pixels = new WheelEvent("wheel", { deltaY: 40, cancelable: true });
     scroller.dispatchEvent(pixels);
     expect(pixels.defaultPrevented).toBe(true);
-    expect(scroller.scrollLeft).toBe(start + 40);
+    expect(scrollBy).toHaveBeenLastCalledWith({ left: 40 });
 
     const lines = new WheelEvent("wheel", { deltaY: 3, deltaMode: 1, cancelable: true });
     scroller.dispatchEvent(lines);
-    expect(scroller.scrollLeft).toBe(start + 40 + 48);
+    expect(scrollBy).toHaveBeenLastCalledWith({ left: 48 });
+    expect(scrollBy).toHaveBeenCalledTimes(2);
   });
 
   it("leaves a horizontal (trackpad) wheel to the browser", () => {
@@ -264,6 +275,7 @@ describe("useWorldCanvas", () => {
     scroller.dispatchEvent(swipe);
     expect(swipe.defaultPrevented).toBe(false);
     expect(scroller.scrollLeft).toBe(start);
+    expect(scrollBy).not.toHaveBeenCalled();
   });
 
   it("leaves a ctrl+wheel (pinch or browser zoom) to the browser", () => {
@@ -276,6 +288,7 @@ describe("useWorldCanvas", () => {
     scroller.dispatchEvent(zoom);
     expect(zoom.defaultPrevented).toBe(false);
     expect(scroller.scrollLeft).toBe(start);
+    expect(scrollBy).not.toHaveBeenCalled();
   });
 
   it("removes its listeners and disconnects the observer on unmount", () => {
@@ -295,6 +308,7 @@ describe("useWorldCanvas", () => {
     scroller.dispatchEvent(wheel);
     expect(wheel.defaultPrevented).toBe(false);
     expect(scroller.scrollLeft).toBe(start);
+    expect(scrollBy).not.toHaveBeenCalled();
   });
 
   it("resizes again when the DPR changes", () => {

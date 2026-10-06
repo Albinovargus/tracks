@@ -105,7 +105,10 @@ export function useWorldCanvas(size: WorldSize | null): {
       // Pinch-zoom and Ctrl+wheel browser zoom arrive as ctrlKey wheels.
       if (event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
       event.preventDefault();
-      scroller.scrollLeft += event.deltaMode === 1 ? event.deltaY * LINE_PX : event.deltaY;
+      // scrollBy, not scrollLeft +=: a snap-mandatory scroller snaps a small
+      // scrollLeft change straight back, but treats scrollBy like a user scroll
+      // and moves on to the next snap position in that direction.
+      scroller.scrollBy({ left: event.deltaMode === 1 ? event.deltaY * LINE_PX : event.deltaY });
       onScroll();
     };
 
