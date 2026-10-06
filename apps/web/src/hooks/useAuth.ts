@@ -3,9 +3,15 @@ import { supabase } from '../lib/supabase.js';
 import { useAuthStore } from '../store/auth.store.js';
 import { api } from '../lib/api.js';
 
-/** A 4xx answer: the auth server saw the session and refused it (bad JWT, deleted user). */
+/**
+ * Statuses where the auth server judged the session itself invalid (bad or expired JWT,
+ * deleted user or session). Others, like 408 timeouts and 429 rate limits, say nothing
+ * about the session, so it is kept.
+ */
+const SESSION_REJECTED = new Set([400, 401, 403, 404]);
+
 function isRejection(status: number | undefined): boolean {
-  return status !== undefined && status >= 400 && status < 500;
+  return status !== undefined && SESSION_REJECTED.has(status);
 }
 
 export function useAuth() {
@@ -26,8 +32,9 @@ export function useAuth() {
           await supabase.auth.signOut({ scope: 'local' });
           setSession(null);
         } else {
-          // The server could not be reached: keep the stored session, which
-          // the API still validates on every call.
+          // The server could not be reached or could not judge the session (network,
+          // timeout, rate limit, 5xx): keep the stored session, which the API still
+          // validates on every call.
           setSession(session);
         }
       }
