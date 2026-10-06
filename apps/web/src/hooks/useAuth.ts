@@ -3,6 +3,11 @@ import { supabase } from '../lib/supabase.js';
 import { useAuthStore } from '../store/auth.store.js';
 import { api } from '../lib/api.js';
 
+/** A 4xx answer: the auth server saw the session and refused it (bad JWT, deleted user). */
+function isRejection(status: number | undefined): boolean {
+  return status !== undefined && status >= 400 && status < 500;
+}
+
 export function useAuth() {
   const { session, user, isLoading, setSession, setLoading } = useAuthStore();
 
@@ -11,11 +16,19 @@ export function useAuth() {
       if (session) {
         // getUser() validates against the server — safe for frontend display.
         // getSession() user data comes from local storage and can be tampered with.
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error } = await supabase.auth.getUser();
         if (user) {
           setSession({ ...session, user });
-        } else {
+        } else if (error && isRejection(error.status)) {
+          // The server refused the stored session. Clear it from storage too: a
+          // session left there comes back through every useAuth's INITIAL_SESSION,
+          // bouncing /login and / forever.
+          await supabase.auth.signOut({ scope: 'local' });
           setSession(null);
+        } else {
+          // The server could not be reached: keep the stored session, which
+          // the API still validates on every call.
+          setSession(session);
         }
       }
       setLoading(false);
