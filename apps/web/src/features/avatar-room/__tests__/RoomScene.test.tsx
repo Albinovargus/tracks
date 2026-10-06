@@ -651,9 +651,16 @@ describe("RoomScene", () => {
     const track = screen.getByRole("img", { hidden: true }).parentElement;
     if (!track) throw new Error("no track");
     const markers = [...track.querySelectorAll<HTMLElement>(".snap-center")];
-    // Fixture place centers 20, 90, 190, 270, 320 art px, times s.
-    expect(markers.map((m) => m.style.left)).toEqual(["40px", "180px", "380px", "540px", "640px"]);
-    for (const marker of markers) expect(marker).toHaveClass("w-0");
+    // Fixture place centers 20, 90, 190, 270, 320 art px, times s. Each marker is
+    // 1 px wide (WebKit may skip a zero-size snap area), centred on that point.
+    expect(markers.map((m) => m.style.left)).toEqual([
+      "39.5px",
+      "179.5px",
+      "379.5px",
+      "539.5px",
+      "639.5px",
+    ]);
+    for (const marker of markers) expect(marker).toHaveClass("w-px");
   });
 
   it("makes the track as wide as the world at the current scale", async () => {

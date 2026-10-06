@@ -348,13 +348,15 @@ function RoomCanvas({
           />
           {view &&
             art?.layout.places.map((place) => (
-              // A point, not the place's span: a snap area wider than the screen lets
-              // the scroller rest anywhere inside it, so one swipe might not move a place.
+              // A 1 px line at the place's center, not the place's span: a snap area
+              // wider than the screen lets the scroller rest anywhere inside it, so one
+              // swipe might not move a place. 1 px, not 0, as WebKit may skip an empty
+              // snap area; the half px keeps its center on the place's center.
               <div
                 key={place.id}
                 aria-hidden
-                className="pointer-events-none absolute top-0 h-full w-0 snap-center"
-                style={{ left: `${(place.x + place.w / 2) * s}px` }}
+                className="pointer-events-none absolute top-0 h-full w-px snap-center"
+                style={{ left: `${(place.x + place.w / 2) * s - 0.5}px` }}
               />
             ))}
           {shown &&
