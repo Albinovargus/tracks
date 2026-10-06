@@ -1,0 +1,3 @@
+# The body grids are read and rewritten byte for byte by the tools (dump-body.lua
+# writes LF), so keep them LF on every checkout.
+body/grids/*.txt text eol=lf
