@@ -1,11 +1,11 @@
-import { createHashRouter } from 'react-router';
+import { createHashRouter, Navigate, type RouteObject } from 'react-router';
 import { AppShell } from './components/layout/AppShell.js';
 import { RequireAuth } from './components/layout/RequireAuth.js';
 import { LoginPage } from './pages/LoginPage.js';
 import { RoomPage } from './features/avatar-room/RoomPage.js';
 import { CreatorPage } from './features/avatar-creator/CreatorPage.js';
 
-export const router = createHashRouter([
+export const routes: RouteObject[] = [
   {
     path: '/login',
     element: <LoginPage />,
@@ -22,4 +22,8 @@ export const router = createHashRouter([
       },
     ],
   },
-]);
+  // Unknown paths (say, an old #/signup link) go home, where RequireAuth decides.
+  { path: '*', element: <Navigate to="/" replace /> },
+];
+
+export const router = createHashRouter(routes);
