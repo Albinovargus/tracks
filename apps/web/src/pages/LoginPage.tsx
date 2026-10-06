@@ -68,6 +68,7 @@ export function LoginPage() {
             <input
               id="email"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="min-h-11 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
@@ -84,6 +85,7 @@ export function LoginPage() {
             <input
               id="password"
               type="password"
+              autoComplete={isSignUp ? 'new-password' : 'current-password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="min-h-11 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"

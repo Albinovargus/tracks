@@ -10,19 +10,6 @@ export const AVATAR_CELL = 64;
 /** Tags every avatar sheet carries, with body.json's timing. */
 export const AVATAR_TAGS = ['front-idle', 'turn', 'side-run'] as const;
 
-/** Slot slices background.aseprite must define (spec §3 Room composition). */
-export const ROOM_SLOT_SLICES = [
-  'trophy-1',
-  'trophy-2',
-  'trophy-3',
-  'medal-1',
-  'medal-2',
-  'medal-3',
-  'frame',
-  'equipment',
-  'decor',
-] as const;
-
 /** Decoded RGBA pixels, row-major, 4 bytes per pixel (pngjs PNG.sync.read). */
 export interface RgbaImage {
   width: number;

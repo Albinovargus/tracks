@@ -42,6 +42,19 @@ describe('LoginPage', () => {
     expect(signUp).toHaveBeenCalledWith('new@example.com', 'Password-123!');
   });
 
+  it('tells password managers which credentials each mode wants', () => {
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+    expect(screen.getByLabelText(/email/i)).toHaveAttribute('autocomplete', 'email');
+    expect(screen.getByLabelText(/password/i)).toHaveAttribute('autocomplete', 'current-password');
+
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
+    expect(screen.getByLabelText(/password/i)).toHaveAttribute('autocomplete', 'new-password');
+  });
+
   it('shows no confirmation notice when sign up signs the user in', async () => {
     signUp.mockResolvedValue({ needsEmailConfirmation: false });
     submitSignUp();

@@ -13,3 +13,18 @@ export function fitScale(
 ): number {
   return Math.max(1, Math.floor(Math.min((availW * dpr) / w, (availH * dpr) / h)));
 }
+
+/**
+ * Device pixels per art pixel for a worldW×worldH world behind a
+ * deviceW×deviceH backing store: the smallest whole number at which the world
+ * covers the screen in both directions, never below 1. The excess is cropped,
+ * never letterboxed (room world spec §3 Scale).
+ */
+export function coverScale(
+  deviceW: number,
+  deviceH: number,
+  worldW: number,
+  worldH: number,
+): number {
+  return Math.max(1, Math.ceil(deviceH / worldH), Math.ceil(deviceW / worldW));
+}

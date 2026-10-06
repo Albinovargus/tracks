@@ -2,7 +2,7 @@
 -- frame durations, tags, slices (bounds and pivot) and every flattened frame's pixels.
 -- Read-only. Use it to prove a drawing script still reproduces the committed art:
 --   run_lua_script(script = 'ROOT = "<repo>"; CANDIDATE_DIR = ROOT .. "/.superpowers/art-previews/room-check";
---     IDS = { "background", "treadmill" }; dofile(ROOT .. "/art/tools/lib/compare-sprites.lua")')
+--     IDS = { "place-treadmill-corner", "treadmill" }; dofile(ROOT .. "/art/tools/lib/compare-sprites.lua")')
 -- Optional REFERENCE_DIR (default art/room). Ends with "RESULT: PASS" or "RESULT: FAIL (<n> problems)".
 local P = dofile(ROOT .. "/art/tools/lib/paths.lua")
 if type(CANDIDATE_DIR) ~= "string" or type(IDS) ~= "table" or #IDS == 0 then

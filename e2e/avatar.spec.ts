@@ -104,7 +104,7 @@ test('a new player creates an avatar, reloads the room and edits the avatar', as
   await expectRoom(page, chosen);
 
   // Edit mode is prefilled with the saved appearance
-  await page.getByRole('link', { name: 'Edit avatar' }).click();
+  await page.getByRole('link', { name: 'Edit avatar', exact: true }).click();
   await expect(page).toHaveURL(/#\/create$/);
   for (const { legend, field } of GROUPS) {
     await expect(
@@ -116,6 +116,12 @@ test('a new player creates an avatar, reloads the room and edits the avatar', as
   const updated: Appearance = { ...chosen, hair_color: 'blonde' };
   await radio(page, 'Hair color', optionLabel(updated, 'hair_color')).check();
   await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expectRoom(page, updated);
+
+  // The mirror in the room opens the creator too
+  await page.getByRole('link', { name: 'Mirror: edit avatar' }).click();
+  await expect(page).toHaveURL(/#\/create$/);
+  await page.goBack();
   await expectRoom(page, updated);
 
   await page.reload();

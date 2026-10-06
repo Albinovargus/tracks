@@ -27,6 +27,27 @@ export function rowPixels(image: RgbaImage, x0: number, y: number, length: numbe
   return Array.from({ length }, (_, i) => pixelAt(image, x0 + i, y));
 }
 
+/** `length` pixelAt values of column x, starting at y0. */
+export function columnPixels(image: RgbaImage, x: number, y0: number, length: number): number[] {
+  return Array.from({ length }, (_, i) => pixelAt(image, x, y0 + i));
+}
+
+/** One message per rect reaching outside the central `safeW` px of a place `placeW` px wide. */
+export function outsideSafeBand(
+  rects: readonly { name: string; x: number; w: number }[],
+  placeW: number,
+  safeW: number,
+): string[] {
+  const left = Math.floor((placeW - safeW) / 2);
+  const right = left + safeW;
+  return rects
+    .filter((r) => r.x < left || r.x + r.w > right)
+    .map(
+      (r) =>
+        `${r.name} spans x ${r.x}..${r.x + r.w - 1}, outside the central ${safeW} px (${left}..${right - 1})`,
+    );
+}
+
 /** The sole on a frame's bottom row (the avatar's ground row, y = 63), or null
  * in a flight frame. */
 export function soleSpan(image: RgbaImage, frame: Rect): SoleSpan | null {

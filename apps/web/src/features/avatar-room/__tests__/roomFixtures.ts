@@ -39,18 +39,23 @@ export function sheet(
   };
 }
 
-/** The background's slot slices, one per sample item. */
-export const SLOTS: SheetSlice[] = [
+/** Fixture place slices (place-local). The fixture world is 340x80: door-left 40,
+ * trophy-wall 100, treadmill-corner 100, mirror-corner 60, door-right 40. */
+export const SHELF_SLOTS: SheetSlice[] = [
   slice("trophy-1", 10, 20, 16, 18),
   slice("trophy-2", 30, 20, 16, 18),
   slice("trophy-3", 50, 20, 16, 18),
-  slice("medal-1", 100, 10, 12, 20),
-  slice("medal-2", 114, 10, 12, 20),
-  slice("medal-3", 128, 10, 12, 20),
+  slice("medal-1", 10, 45, 12, 20),
+  slice("medal-2", 24, 45, 12, 20),
+  slice("medal-3", 38, 45, 12, 20),
   slice("frame", 70, 12, 24, 30),
-  slice("equipment", 60, 60, 80, 50),
-  slice("decor", 150, 70, 20, 40),
 ];
+export const HOME_SLOTS: SheetSlice[] = [slice("equipment", 10, 25, 80, 50)];
+export const MIRROR_SLICES: SheetSlice[] = [
+  slice("hotspot-mirror", 20, 10, 20, 60),
+  slice("decor", 40, 30, 16, 45),
+];
+export const PLACE_H = 80;
 
 // The belt is sheet frames 1..3; frame 0 is an unused still.
 export const BELT: SheetTag = {
@@ -79,7 +84,6 @@ export function roomRegistry(
   overrides: SheetData[] = [],
 ): ReadonlyMap<string, SheetData> {
   const sheets = [
-    sheet("background", 180, 120, { slices: SLOTS }),
     sheet("frame-bib", 20, 26),
     sheet("trophy-gold", 10, 14),
     sheet("trophy-silver", 9, 12),
@@ -89,6 +93,11 @@ export function roomRegistry(
     sheet("medal-bronze", 8, 11),
     sheet("plant", 14, 30),
     sheet("treadmill", 72, 40, { frames: 4, tags: [BELT], slices: [RIDER] }),
+    sheet("place-door-left", 40, PLACE_H),
+    sheet("place-trophy-wall", 100, PLACE_H, { slices: SHELF_SLOTS }),
+    sheet("place-treadmill-corner", 100, PLACE_H, { slices: HOME_SLOTS }),
+    sheet("place-mirror-corner", 60, PLACE_H, { slices: MIRROR_SLICES }),
+    sheet("place-door-right", 40, PLACE_H),
     BODY,
     ...overrides,
   ];

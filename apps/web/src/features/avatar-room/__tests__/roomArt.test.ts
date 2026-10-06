@@ -17,11 +17,13 @@ import {
   type SheetId,
   type SheetSlice,
 } from '../../avatar/sheets.js';
-import { layoutRoom, type RoomLayout } from '../roomLayout.js';
-import { SAMPLE_ROOM, type SampleRoom } from '../sampleRoom.js';
+import { layoutWorld } from '../roomLayout.js';
+import { WORLD } from '../world.js';
 import {
   beltMotionProblems,
   beltSpan,
+  columnPixels,
+  outsideSafeBand,
   pixelAt,
   plantedFootTravels,
   rowPixels,
@@ -31,8 +33,6 @@ import {
 
 const SPRITES_DIR = new URL('../../../assets/sprites/', import.meta.url);
 
-/** The room's native size (spec section 1 Scale). */
-const ROOM: Rect = { x: 0, y: 0, w: 180, h: 120 };
 /** The avatar cell and its anchor pixel (spec section 1 Scale). */
 const CELL = 64;
 const ANCHOR = { x: 32, y: 63 };
@@ -58,26 +58,6 @@ function load(id: SheetId): LoadedSheet {
   };
   loaded.set(id, result);
   return result;
-}
-
-/** Each background slot slice that has a SAMPLE_ROOM item, with the item
- * layoutRoom puts in it. A slot with no item (decor, when the room has none)
- * stays empty and is left out. */
-function slotItems(room: SampleRoom): Array<[slot: string, item: SheetId]> {
-  return [
-    ...room.trophies.map((id, i): [string, SheetId] => [`trophy-${i + 1}`, id]),
-    ...room.medals.map((id, i): [string, SheetId] => [`medal-${i + 1}`, id]),
-    ['frame', room.frame],
-    ['equipment', room.equipment],
-    ...(room.decor === undefined ? [] : [['decor', room.decor] as [string, SheetId]]),
-  ];
-}
-
-/** layoutRoom(SAMPLE_ROOM) on the exported sheets, after checking each is exported. */
-function sampleLayout(): RoomLayout {
-  load('background');
-  for (const [, id] of slotItems(SAMPLE_ROOM)) load(id);
-  return layoutRoom(SAMPLE_ROOM);
 }
 
 function frameRect(sheet: SheetData, index: number): Rect {
@@ -114,47 +94,6 @@ function inside(inner: Rect, outer: Rect): boolean {
 }
 
 describe('room art', () => {
-  it('has a single-frame 180x120 background with no transparent pixel', () => {
-    const { sheet, image } = load('background');
-    expect(sheet.frames).toHaveLength(1);
-    const frame = frameRect(sheet, 0);
-    expect([frame.w, frame.h]).toEqual([ROOM.w, ROOM.h]);
-    let holes = 0;
-    for (let y = 0; y < frame.h; y++) {
-      for (let x = 0; x < frame.w; x++) {
-        if (pixelAt(image, frame.x + x, frame.y + y) === -1) holes++;
-      }
-    }
-    expect(holes).toBe(0);
-  });
-
-  it('fits every v1 sample item in its slot and every placed sprite in the room', () => {
-    const background = load('background').sheet;
-    const problems: string[] = [];
-    for (const [name, id] of slotItems(SAMPLE_ROOM)) {
-      const slot = slice(background, name);
-      const item = frameRect(load(id).sheet, 0);
-      if (item.w > slot.w || item.h > slot.h) {
-        problems.push(
-          `${id} is ${item.w}x${item.h}, larger than slice ${name} (${slot.w}x${slot.h})`,
-        );
-      }
-    }
-    for (const sprite of sampleLayout().sprites) {
-      const { w, h } = frameRect(getSheet(sprite.sheet), 0);
-      if (!inside({ x: sprite.x, y: sprite.y, w, h }, ROOM)) {
-        problems.push(`${sprite.sheet} at (${sprite.x}, ${sprite.y}) reaches outside the room`);
-      }
-    }
-    expect(problems).toEqual([]);
-  });
-
-  it('stands the avatar cell on the rider pivot, inside the room', () => {
-    const feet = sampleLayout().avatarFeet;
-    const cell: Rect = { x: feet.x - ANCHOR.x, y: feet.y - ANCHOR.y, w: CELL, h: CELL };
-    expect(inside(cell, ROOM), `avatar cell ${JSON.stringify(cell)}`).toBe(true);
-  });
-
   it('has a belt under the foot point, a clear rider area and a right-end console', () => {
     const { sheet, image } = load('treadmill');
     const r = rider(sheet);
@@ -219,5 +158,96 @@ describe('room art', () => {
     }
     const rows = fullRows.map((row) => row.slice(span.from, span.to + 1));
     expect(beltMotionProblems(rows, travel)).toEqual([]);
+  });
+});
+
+/** World geometry (room world spec section 2). */
+const PLACE_H = 270;
+const SAFE_W = 110;
+
+describe('world art', () => {
+  it('draws every place 270 px tall, one frame, a multiple of 10 wide, with no hole', () => {
+    const problems: string[] = [];
+    for (const place of WORLD) {
+      const { sheet, image } = load(place.sheet);
+      const frame = frameRect(sheet, 0);
+      if (sheet.frames.length !== 1) problems.push(`${place.sheet} has ${sheet.frames.length} frames`);
+      if (frame.h !== PLACE_H) problems.push(`${place.sheet} is ${frame.h} px tall`);
+      if (frame.w % 10 !== 0) problems.push(`${place.sheet} is ${frame.w} px wide`);
+      for (let y = 0; y < frame.h; y++) {
+        for (let x = 0; x < frame.w; x++) {
+          if (pixelAt(image, frame.x + x, frame.y + y) === -1) {
+            problems.push(`${place.sheet} has a transparent pixel at (${x}, ${y})`);
+            y = frame.h;
+            break;
+          }
+        }
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
+  it('joins places without a seam: every edge column matches the first place', () => {
+    const firstPlace = WORLD[0];
+    if (!firstPlace) throw new Error('WORLD is empty');
+    const ref = load(firstPlace.sheet);
+    const refFrame = frameRect(ref.sheet, 0);
+    const reference = columnPixels(ref.image, refFrame.x, refFrame.y, PLACE_H);
+    const problems: string[] = [];
+    for (const place of WORLD) {
+      const { sheet, image } = load(place.sheet);
+      const frame = frameRect(sheet, 0);
+      for (const [side, x] of [['left', 0], ['right', frame.w - 1]] as const) {
+        const column = columnPixels(image, frame.x + x, frame.y, PLACE_H);
+        const row = column.findIndex((c, y) => c !== reference[y]);
+        if (row !== -1) problems.push(`${place.sheet} ${side} edge differs at y = ${row}`);
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
+  it('keeps every slot and hotspot within the central 110 px of its place', () => {
+    const problems = WORLD.flatMap((place) => {
+      const { sheet } = load(place.sheet);
+      return outsideSafeBand(sheet.slices, frameRect(sheet, 0).w, SAFE_W).map(
+        (p) => `${place.sheet}: ${p}`,
+      );
+    });
+    expect(problems).toEqual([]);
+  });
+
+  it('fits every WORLD item in its slot', () => {
+    const problems: string[] = [];
+    for (const place of WORLD) {
+      const placeSheet = load(place.sheet).sheet;
+      for (const item of place.items) {
+        const slot = slice(placeSheet, item.slot);
+        const art = frameRect(load(item.sheet).sheet, 0);
+        if (art.w > slot.w || art.h > slot.h) {
+          problems.push(`${item.sheet} is ${art.w}x${art.h}, larger than ${place.sheet} slice ${item.slot} (${slot.w}x${slot.h})`);
+        }
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
+  it('lays out the world on whole pixels with the avatar cell inside it', () => {
+    const layout = layoutWorld();
+    const world: Rect = { x: 0, y: 0, w: layout.width, h: layout.height };
+    const problems: string[] = [];
+    for (const sprite of layout.sprites) {
+      const { w, h } = frameRect(getSheet(sprite.sheet), 0);
+      if (!Number.isInteger(sprite.x) || !Number.isInteger(sprite.y)) {
+        problems.push(`${sprite.sheet} at (${sprite.x}, ${sprite.y}) is off the pixel grid`);
+      }
+      if (!inside({ x: sprite.x, y: sprite.y, w, h }, world)) {
+        problems.push(`${sprite.sheet} at (${sprite.x}, ${sprite.y}) reaches outside the world`);
+      }
+    }
+    const feet = layout.avatarFeet;
+    const cell: Rect = { x: feet.x - ANCHOR.x, y: feet.y - ANCHOR.y, w: CELL, h: CELL };
+    if (!inside(cell, world)) problems.push(`avatar cell ${JSON.stringify(cell)} is outside the world`);
+    expect(layout.hotspots.map((h) => h.id)).toEqual(['mirror']);
+    expect(problems).toEqual([]);
   });
 });

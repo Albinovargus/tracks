@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
+import { createMemoryRouter, RouterProvider } from "react-router";
 import type { AvatarAppearance } from "@tracks/types";
 import type { SheetData } from "../../avatar/sheets.js";
 
@@ -20,14 +21,15 @@ vi.mock("../../avatar/canvas.js", () => ({
   drawAvatar,
 }));
 
-// Plain refs and scale 1: no ResizeObserver, no matchMedia, no getContext.
-vi.mock("../../avatar/usePixelCanvas.js", async () => {
+// Plain refs and no view: no ResizeObserver, no matchMedia, no getContext.
+vi.mock("../useWorldCanvas.js", async () => {
   const { useRef } = await import("react");
   return {
-    usePixelCanvas: () => ({
-      stageRef: useRef<HTMLDivElement | null>(null),
+    useWorldCanvas: () => ({
+      scrollerRef: useRef<HTMLDivElement | null>(null),
       canvasRef: useRef<HTMLCanvasElement | null>(null),
-      scale: 1,
+      cameraRef: useRef(0),
+      view: null,
       generation: 0,
     }),
   };
@@ -96,7 +98,10 @@ describe("RoomScene when a sprite sheet fails to load", () => {
       const getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext");
       fail(error);
 
-      render(<RoomScene appearance={APPEARANCE} />);
+      const router = createMemoryRouter([
+        { path: "/", element: <RoomScene appearance={APPEARANCE} /> },
+      ]);
+      render(<RouterProvider router={router} />);
 
       expect(await screen.findByRole("alert")).toHaveTextContent(
         "Couldn't load the room.",

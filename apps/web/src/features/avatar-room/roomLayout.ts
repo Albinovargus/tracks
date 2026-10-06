@@ -7,31 +7,28 @@ import {
   type SheetId,
   type SheetSlice,
 } from "../avatar/sheets.js";
-import type { SampleRoom } from "./sampleRoom.js";
+import {
+  AVATAR_SPOT,
+  HotspotIdSchema,
+  WORLD,
+  type AvatarSpot,
+  type HotspotId,
+  type PlaceDef,
+  type PlaceId,
+} from "./world.js";
 
 export interface PlacedSprite {
   sheet: SheetId;
-  /** Top-left draw position in room pixels. */
+  /** Top-left draw position in world px. */
   x: number;
   y: number;
   /** True for the equipment: it plays its `belt` tag in step with the run. */
   animated: boolean;
 }
 
-export interface RoomLayout {
-  /**
-   * Draw order: background, frame, trophies, medals, decor (only when the room
-   * has one), treadmill.
-   */
-  sprites: PlacedSprite[];
-  /** Where the avatar cell's anchor pixel (32, 63) goes, in room pixels. */
-  avatarFeet: { x: number; y: number };
-}
-
 type Registry = ReadonlyMap<SheetId, SheetData>;
 type Alignment = "standing" | "hanging";
 
-const BACKGROUND_SHEET: SheetId = "background";
 const RIDER_SLICE = "rider";
 const BELT_TAG = "belt";
 
@@ -67,55 +64,6 @@ function place(
   };
 }
 
-/** Pure: positions every room sprite from the background's slot slices. */
-export function layoutRoom(
-  room: SampleRoom,
-  registry: Registry = SHEETS,
-): RoomLayout {
-  const background = getSheet(BACKGROUND_SHEET, registry);
-  const slot = (name: string): SheetSlice => findSlice(background, name);
-
-  const equipment = getSheet(room.equipment, registry);
-  if (!equipment.tags.some((t) => t.name === BELT_TAG)) {
-    throw new Error(`Sheet "${equipment.id}" has no "${BELT_TAG}" tag`);
-  }
-  const rider = findSlice(equipment, RIDER_SLICE);
-  if (!rider.pivot) {
-    throw new Error(
-      `Slice "${RIDER_SLICE}" in sheet "${equipment.id}" has no pivot`,
-    );
-  }
-
-  const treadmill = place(
-    room.equipment,
-    slot("equipment"),
-    "standing",
-    registry,
-    true,
-  );
-
-  return {
-    sprites: [
-      { sheet: BACKGROUND_SHEET, x: 0, y: 0, animated: false },
-      place(room.frame, slot("frame"), "hanging", registry),
-      ...room.trophies.map((id, i) =>
-        place(id, slot(`trophy-${i + 1}`), "standing", registry),
-      ),
-      ...room.medals.map((id, i) =>
-        place(id, slot(`medal-${i + 1}`), "hanging", registry),
-      ),
-      ...(room.decor === undefined
-        ? []
-        : [place(room.decor, slot("decor"), "standing", registry)]),
-      treadmill,
-    ],
-    avatarFeet: {
-      x: treadmill.x + rider.x + rider.pivot.x,
-      y: treadmill.y + rider.y + rider.pivot.y,
-    },
-  };
-}
-
 /**
  * Pure: the sheet rect to draw for a placed sprite. Static sprites use frame 0.
  * The animated equipment shows belt frame i with side-run frame i, and belt
@@ -135,4 +83,113 @@ export function spriteFrame(
   if (!rect)
     throw new Error(`Sheet "${sheet.id}" has no "${BELT_TAG}" frame ${offset}`);
   return rect;
+}
+
+export interface WorldPlace {
+  id: PlaceId;
+  label: string;
+  /** Left edge in world px. */
+  x: number;
+  w: number;
+}
+
+export interface Hotspot {
+  id: HotspotId;
+  /** World px. */
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface WorldLayout {
+  /** Sum of the place widths, in art px. */
+  width: number;
+  /** The shared place height, in art px. */
+  height: number;
+  places: WorldPlace[];
+  /** Draw order: every place left to right, then each place's items in its `items` order. */
+  sprites: PlacedSprite[];
+  hotspots: Hotspot[];
+  /** Where the avatar cell's anchor pixel (32, 63) goes, in world px. */
+  avatarFeet: { x: number; y: number };
+}
+
+const HOTSPOT_PREFIX = "hotspot-";
+
+/** Hanging items hang top-center from their slot; the other known kinds stand bottom-center. */
+export function slotAlignment(slot: string): Alignment {
+  if (slot === "frame" || /^medal-\d+$/.test(slot)) return "hanging";
+  if (slot === "equipment" || slot === "decor" || /^trophy-\d+$/.test(slot)) return "standing";
+  throw new Error(`Unknown slot kind "${slot}"`);
+}
+
+/** The foot point on equipment placed at `sprite`: its rider slice pivot, in world px. */
+function equipmentFeet(sprite: PlacedSprite, registry: Registry): { x: number; y: number } {
+  const equipment = getSheet(sprite.sheet, registry);
+  if (!equipment.tags.some((t) => t.name === BELT_TAG)) {
+    throw new Error(`Sheet "${equipment.id}" has no "${BELT_TAG}" tag`);
+  }
+  const rider = findSlice(equipment, RIDER_SLICE);
+  if (!rider.pivot) {
+    throw new Error(`Slice "${RIDER_SLICE}" in sheet "${equipment.id}" has no pivot`);
+  }
+  return { x: sprite.x + rider.x + rider.pivot.x, y: sprite.y + rider.y + rider.pivot.y };
+}
+
+/** Pure: lays the world's places out left to right and positions every sprite and hotspot. */
+export function layoutWorld(
+  world: readonly PlaceDef[] = WORLD,
+  spot: AvatarSpot = AVATAR_SPOT,
+  registry: Registry = SHEETS,
+): WorldLayout {
+  const first = world[0];
+  if (first === undefined) throw new Error("The world has no places");
+  if (!world.some((p) => p.id === spot.place)) {
+    throw new Error(`The avatar spot names place "${spot.place}", which is not in the world`);
+  }
+  const height = firstFrame(getSheet(first.sheet, registry)).h;
+  const places: WorldPlace[] = [];
+  const backgrounds: PlacedSprite[] = [];
+  const items: PlacedSprite[] = [];
+  const hotspots: Hotspot[] = [];
+  let avatarFeet: { x: number; y: number } | null = null;
+  let x = 0;
+
+  for (const def of world) {
+    const sheet = getSheet(def.sheet, registry);
+    const frame = firstFrame(sheet);
+    if (frame.h !== height) {
+      throw new Error(
+        `Place sheet "${sheet.id}" is ${frame.h} px tall; every place must be ${height} px tall`,
+      );
+    }
+    places.push({ id: def.id, label: def.label, x, w: frame.w });
+    backgrounds.push({ sheet: def.sheet, x, y: 0, animated: false });
+
+    for (const s of sheet.slices) {
+      if (!s.name.startsWith(HOTSPOT_PREFIX)) continue;
+      const id = HotspotIdSchema.safeParse(s.name.slice(HOTSPOT_PREFIX.length));
+      if (!id.success) {
+        throw new Error(`Sheet "${sheet.id}" has slice "${s.name}", which is not a known hotspot`);
+      }
+      hotspots.push({ id: id.data, x: x + s.x, y: s.y, w: s.w, h: s.h });
+    }
+
+    for (const item of def.items) {
+      const isSpot = def.id === spot.place && item.slot === spot.slot;
+      const local = place(item.sheet, findSlice(sheet, item.slot), slotAlignment(item.slot), registry, isSpot);
+      const sprite = { ...local, x: local.x + x };
+      items.push(sprite);
+      if (isSpot) avatarFeet = equipmentFeet(sprite, registry);
+    }
+    x += frame.w;
+  }
+
+  if (avatarFeet === null) {
+    throw new Error(
+      `Place "${spot.place}" has no item in slot "${spot.slot}" for the avatar to stand on`,
+    );
+  }
+  return { width: x, height, places, sprites: [...backgrounds, ...items], hotspots, avatarFeet };
 }

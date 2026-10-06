@@ -3,6 +3,17 @@ import { supabase } from '../lib/supabase.js';
 import { useAuthStore } from '../store/auth.store.js';
 import { api } from '../lib/api.js';
 
+/**
+ * Statuses where the auth server judged the session itself invalid (bad or expired JWT,
+ * deleted user or session). Others, like 408 timeouts and 429 rate limits, say nothing
+ * about the session, so it is kept.
+ */
+const SESSION_REJECTED = new Set([400, 401, 403, 404]);
+
+function isRejection(status: number | undefined): boolean {
+  return status !== undefined && SESSION_REJECTED.has(status);
+}
+
 export function useAuth() {
   const { session, user, isLoading, setSession, setLoading } = useAuthStore();
 
@@ -11,11 +22,20 @@ export function useAuth() {
       if (session) {
         // getUser() validates against the server — safe for frontend display.
         // getSession() user data comes from local storage and can be tampered with.
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error } = await supabase.auth.getUser();
         if (user) {
           setSession({ ...session, user });
-        } else {
+        } else if (error && isRejection(error.status)) {
+          // The server refused the stored session. Clear it from storage too: a
+          // session left there comes back through every useAuth's INITIAL_SESSION,
+          // bouncing /login and / forever.
+          await supabase.auth.signOut({ scope: 'local' });
           setSession(null);
+        } else {
+          // The server could not be reached or could not judge the session (network,
+          // timeout, rate limit, 5xx): keep the stored session, which the API still
+          // validates on every call.
+          setSession(session);
         }
       }
       setLoading(false);

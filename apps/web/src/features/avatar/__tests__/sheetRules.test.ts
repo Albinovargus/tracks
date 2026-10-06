@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   AVATAR_TAGS,
-  ROOM_SLOT_SLICES,
   beltProblems,
   cellProblems,
   isAvatarSheet,
@@ -127,7 +126,7 @@ describe('swapRampFor and isAvatarSheet', () => {
   });
 
   it('treats room sheets as unswapped and not part of the avatar', () => {
-    for (const id of ['background', 'treadmill', 'frame-bib', 'trophy-gold', 'medal-gold', 'plant']) {
+    for (const id of ['place-trophy-wall', 'treadmill', 'frame-bib', 'trophy-gold', 'medal-gold', 'plant']) {
       expect(swapRampFor(id)).toBeNull();
       expect(isAvatarSheet(id)).toBe(false);
     }
@@ -331,20 +330,6 @@ describe('sliceProblems', () => {
     expect(sliceProblems(data, ['rider', 'decor'], true)).toEqual([
       'slice "rider" has no pivot',
       'missing slice "decor"',
-    ]);
-  });
-
-  it('names every room slot slice', () => {
-    expect(ROOM_SLOT_SLICES).toEqual([
-      'trophy-1',
-      'trophy-2',
-      'trophy-3',
-      'medal-1',
-      'medal-2',
-      'medal-3',
-      'frame',
-      'equipment',
-      'decor',
     ]);
   });
 });
