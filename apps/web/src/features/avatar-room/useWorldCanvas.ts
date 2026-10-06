@@ -55,6 +55,8 @@ export function useWorldCanvas(size: WorldSize | null): {
     let cssW = 0;
     let cssH = 0;
     let applied: WorldView | null = null;
+    // The CSS width `applied` was built from (backingW / dpr can be px away at dpr < 1).
+    let appliedCssW = 0;
     let media: MediaQueryList | null = null;
 
     const resize = (): void => {
@@ -76,6 +78,7 @@ export function useWorldCanvas(size: WorldSize | null): {
       const next = viewFor(backingW, backingH, dpr, width, height);
       const scrollLeft = scrollLeftCentering(focusX, next, width);
       applied = next;
+      appliedCssW = cssW;
       canvas.width = backingW;
       canvas.height = backingH;
       canvas.style.width = `${backingW / dpr}px`;
@@ -97,7 +100,7 @@ export function useWorldCanvas(size: WorldSize | null): {
       // snap-mandatory scroller re-snaps on resize first). Measured against the old
       // view this scroll would move the focus, so resize() re-anchors from the last
       // camera instead and sets the scroll position itself.
-      if (Math.abs(scroller.clientWidth - applied.backingW / applied.dpr) >= 1) return;
+      if (Math.abs(scroller.clientWidth - appliedCssW) >= 1) return;
       cameraRef.current = cameraX(scroller.scrollLeft, applied, width);
     };
 

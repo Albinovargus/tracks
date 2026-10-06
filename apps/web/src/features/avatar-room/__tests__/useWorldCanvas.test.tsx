@@ -234,6 +234,18 @@ describe("useWorldCanvas", () => {
     expect(scroller.scrollLeft).toBe(state().camera / view.dpr);
   });
 
+  it("follows scrolling at DPR below 1, where backingW / dpr rounds a px away", () => {
+    setDpr(0.5);
+    render(<Probe size={WORLD} />);
+    observe(601, 700); // backingW round(300.5) = 301, and 301 / 0.5 = 602, not 601
+    const scroller = screen.getByTestId("scroller");
+    act(() => {
+      scroller.scrollLeft = 200;
+      scroller.dispatchEvent(new Event("scroll"));
+    });
+    expect(state().camera).toBe(100);
+  });
+
   it("converts the scroll position to a whole-device-px camera", () => {
     setDpr(3);
     render(<Probe size={WORLD} />);
