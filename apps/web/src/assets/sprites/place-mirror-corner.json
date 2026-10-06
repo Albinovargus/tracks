@@ -1,0 +1,26 @@
+{ "frames": [
+   {
+    "filename": "place-mirror-corner.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 130, "h": 270 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 130, "h": 270 },
+    "sourceSize": { "w": 130, "h": 270 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3.18.6-x64",
+  "image": "place-mirror-corner.png",
+  "format": "RGBA8888",
+  "size": { "w": 130, "h": 270 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "slices": [
+   { "name": "hotspot-mirror", "keys": [{ "frame": 0, "bounds": {"x": 50, "y": 186, "w": 30, "h": 76 } }] },
+   { "name": "decor", "keys": [{ "frame": 0, "bounds": {"x": 14, "y": 222, "w": 24, "h": 40 } }] }
+  ]
+ }
+}
