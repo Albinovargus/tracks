@@ -9,7 +9,7 @@ export function RequireAuth() {
 
   useEffect(() => {
     if (!isLoading && !session) {
-      navigate('/login');
+      void navigate('/login', { replace: true });
     }
   }, [session, isLoading, navigate]);
 

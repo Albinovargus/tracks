@@ -49,6 +49,9 @@ describe('RequireAuth', () => {
 
     expect(await screen.findByText('Login page')).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/login');
+    // Replace, not push: Back (and Android's back button) must not land on the
+    // guarded page only to be bounced to /login again.
+    expect(router.state.historyAction).toBe('REPLACE');
   });
 
   it('renders the page for a signed-in user', () => {
