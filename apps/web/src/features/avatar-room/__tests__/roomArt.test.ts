@@ -17,11 +17,14 @@ import {
   type SheetId,
   type SheetSlice,
 } from '../../avatar/sheets.js';
-import { layoutRoom, type RoomLayout } from '../roomLayout.js';
+import { layoutRoom, layoutWorld, type RoomLayout } from '../roomLayout.js';
 import { SAMPLE_ROOM, type SampleRoom } from '../sampleRoom.js';
+import { WORLD } from '../world.js';
 import {
   beltMotionProblems,
   beltSpan,
+  columnPixels,
+  outsideSafeBand,
   pixelAt,
   plantedFootTravels,
   rowPixels,
@@ -219,5 +222,96 @@ describe('room art', () => {
     }
     const rows = fullRows.map((row) => row.slice(span.from, span.to + 1));
     expect(beltMotionProblems(rows, travel)).toEqual([]);
+  });
+});
+
+/** World geometry (room world spec section 2). */
+const PLACE_H = 270;
+const SAFE_W = 110;
+
+describe('world art', () => {
+  it('draws every place 270 px tall, one frame, a multiple of 10 wide, with no hole', () => {
+    const problems: string[] = [];
+    for (const place of WORLD) {
+      const { sheet, image } = load(place.sheet);
+      const frame = frameRect(sheet, 0);
+      if (sheet.frames.length !== 1) problems.push(`${place.sheet} has ${sheet.frames.length} frames`);
+      if (frame.h !== PLACE_H) problems.push(`${place.sheet} is ${frame.h} px tall`);
+      if (frame.w % 10 !== 0) problems.push(`${place.sheet} is ${frame.w} px wide`);
+      for (let y = 0; y < frame.h; y++) {
+        for (let x = 0; x < frame.w; x++) {
+          if (pixelAt(image, frame.x + x, frame.y + y) === -1) {
+            problems.push(`${place.sheet} has a transparent pixel at (${x}, ${y})`);
+            y = frame.h;
+            break;
+          }
+        }
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
+  it('joins places without a seam: every edge column matches the first place', () => {
+    const firstPlace = WORLD[0];
+    if (!firstPlace) throw new Error('WORLD is empty');
+    const ref = load(firstPlace.sheet);
+    const refFrame = frameRect(ref.sheet, 0);
+    const reference = columnPixels(ref.image, refFrame.x, refFrame.y, PLACE_H);
+    const problems: string[] = [];
+    for (const place of WORLD) {
+      const { sheet, image } = load(place.sheet);
+      const frame = frameRect(sheet, 0);
+      for (const [side, x] of [['left', 0], ['right', frame.w - 1]] as const) {
+        const column = columnPixels(image, frame.x + x, frame.y, PLACE_H);
+        const row = column.findIndex((c, y) => c !== reference[y]);
+        if (row !== -1) problems.push(`${place.sheet} ${side} edge differs at y = ${row}`);
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
+  it('keeps every slot and hotspot within the central 110 px of its place', () => {
+    const problems = WORLD.flatMap((place) => {
+      const { sheet } = load(place.sheet);
+      return outsideSafeBand(sheet.slices, frameRect(sheet, 0).w, SAFE_W).map(
+        (p) => `${place.sheet}: ${p}`,
+      );
+    });
+    expect(problems).toEqual([]);
+  });
+
+  it('fits every WORLD item in its slot', () => {
+    const problems: string[] = [];
+    for (const place of WORLD) {
+      const placeSheet = load(place.sheet).sheet;
+      for (const item of place.items) {
+        const slot = slice(placeSheet, item.slot);
+        const art = frameRect(load(item.sheet).sheet, 0);
+        if (art.w > slot.w || art.h > slot.h) {
+          problems.push(`${item.sheet} is ${art.w}x${art.h}, larger than ${place.sheet} slice ${item.slot} (${slot.w}x${slot.h})`);
+        }
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
+  it('lays out the world on whole pixels with the avatar cell inside it', () => {
+    const layout = layoutWorld();
+    const world: Rect = { x: 0, y: 0, w: layout.width, h: layout.height };
+    const problems: string[] = [];
+    for (const sprite of layout.sprites) {
+      const { w, h } = frameRect(getSheet(sprite.sheet), 0);
+      if (!Number.isInteger(sprite.x) || !Number.isInteger(sprite.y)) {
+        problems.push(`${sprite.sheet} at (${sprite.x}, ${sprite.y}) is off the pixel grid`);
+      }
+      if (!inside({ x: sprite.x, y: sprite.y, w, h }, world)) {
+        problems.push(`${sprite.sheet} at (${sprite.x}, ${sprite.y}) reaches outside the world`);
+      }
+    }
+    const feet = layout.avatarFeet;
+    const cell: Rect = { x: feet.x - ANCHOR.x, y: feet.y - ANCHOR.y, w: CELL, h: CELL };
+    if (!inside(cell, world)) problems.push(`avatar cell ${JSON.stringify(cell)} is outside the world`);
+    expect(layout.hotspots.map((h) => h.id)).toEqual(['mirror']);
+    expect(problems).toEqual([]);
   });
 });

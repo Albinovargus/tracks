@@ -3,7 +3,9 @@ import type { RgbaImage } from '../../avatar/__tests__/sheetRules.js';
 import {
   beltMotionProblems,
   beltSpan,
+  columnPixels,
   pixelAt,
+  outsideSafeBand,
   plantedFootTravels,
   rowPeriod,
   rowPixels,
@@ -165,5 +167,32 @@ describe('beltMotionProblems', () => {
 
   it('reports a belt with no frames', () => {
     expect(beltMotionProblems([], 2)).toEqual(['the belt has no frames']);
+  });
+});
+
+describe('columnPixels', () => {
+  it('reads a column top to bottom, -1 where transparent or outside', () => {
+    const image = { width: 1, height: 2, data: new Uint8Array([1, 2, 3, 255, 0, 0, 0, 0]) };
+    expect(columnPixels(image, 0, 0, 3)).toEqual([0x010203, -1, -1]);
+  });
+});
+
+describe('outsideSafeBand', () => {
+  it('names rects outside the central band and passes the rest', () => {
+    // 130 wide, 110 safe: x 10..119.
+    expect(
+      outsideSafeBand(
+        [
+          { name: 'ok', x: 10, w: 110 },
+          { name: 'left', x: 9, w: 5 },
+          { name: 'right', x: 100, w: 21 },
+        ],
+        130,
+        110,
+      ),
+    ).toEqual([
+      'left spans x 9..13, outside the central 110 px (10..119)',
+      'right spans x 100..120, outside the central 110 px (10..119)',
+    ]);
   });
 });

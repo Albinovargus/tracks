@@ -29,6 +29,7 @@ import {
 } from './sheetRules.js';
 import { layoutRoom } from '../../avatar-room/roomLayout.js';
 import { SAMPLE_ROOM, type SampleRoom } from '../../avatar-room/sampleRoom.js';
+import { WORLD } from '../../avatar-room/world.js';
 import {
   AVATAR_SHEET_IDS,
   BODY_SHEET,
@@ -228,6 +229,14 @@ describe('catalog and sample room coverage', () => {
       ...[SAMPLE_ROOM.decor].filter(isSheetId),
     ];
     expect(unexported(roomSheets), 'room sheets with no export in src/assets/sprites').toEqual([]);
+  });
+
+  it('exports every WORLD place and item', () => {
+    const worldSheets: SheetId[] = WORLD.flatMap((place) => [
+      place.sheet,
+      ...place.items.map((item) => item.sheet),
+    ]);
+    expect(unexported(worldSheets), 'world sheets with no export in src/assets/sprites').toEqual([]);
   });
 
   it('gives the background a slot slice for every SAMPLE_ROOM item', () => {
