@@ -272,7 +272,7 @@ function RoomCanvas({
     redrawRef.current?.();
   }, [generation, art]);
 
-  // The dot for the place nearest the viewport's center; null until the first scroll.
+  // The dot for the place nearest the viewport's center; null until the world is sized.
   const [currentPlace, setCurrentPlace] = useState<number | null>(null);
   useEffect(() => {
     const scroller = scrollerRef.current;
@@ -283,6 +283,8 @@ function RoomCanvas({
         nearestPlace(centerWorldX(camX, view), art.layout.places),
       );
     };
+    // A resize can keep or clamp scrollLeft without a scroll event: read it now too.
+    update();
     scroller.addEventListener("scroll", update, { passive: true });
     return () => scroller.removeEventListener("scroll", update);
   }, [art, view, scrollerRef]);
@@ -326,7 +328,7 @@ function RoomCanvas({
         tabIndex={0}
         hidden={failed}
         className={cn(
-          "absolute inset-0 overflow-x-auto overflow-y-hidden overscroll-x-contain outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          "absolute inset-0 overflow-x-auto overflow-y-hidden overscroll-x-contain outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
           view &&
             art &&
             shouldSnap(view, art.layout.places) &&

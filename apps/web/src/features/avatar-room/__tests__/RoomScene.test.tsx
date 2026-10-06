@@ -553,6 +553,8 @@ describe("RoomScene", () => {
       };
     }
     await mountScene(APPEARANCE);
+    // Where useWorldCanvas puts the first size: home center 190 at k 2 is camera 280.
+    screen.getByRole("region", { name: "Room" }).scrollLeft = 280;
     show(VIEW_PART, 1);
     flushFrame(0);
 
@@ -583,6 +585,54 @@ describe("RoomScene", () => {
     expect(screen.getByRole("button", { name: "Mirror" })).toHaveAttribute(
       "aria-current",
       "true",
+    );
+  });
+
+  it("names the place at the center without a scroll event when the scroll is clamped or kept", async () => {
+    await mountScene(APPEARANCE);
+    const scroller = screen.getByRole("region", { name: "Room" });
+    // Clamped at 0, home cannot be centered: the center is art x 50, nearest the left door (20).
+    show(VIEW_PART, 1);
+    flushFrame(0);
+    expect(screen.getByRole("button", { name: "Left door" })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+
+    act(() => {
+      scroller.scrollLeft = 280;
+      scroller.dispatchEvent(new Event("scroll"));
+    });
+    expect(screen.getByRole("button", { name: "Treadmill" })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+
+    // A resize that keeps scrollLeft 280: at k 4 the center is (280 + 100) / 4 = 95, the trophy wall.
+    show({ k: 4, dpr: 1, backingW: 200, backingH: 320, camY: 0 }, 2);
+    expect(screen.getByRole("button", { name: "Trophy wall" })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+  });
+
+  it("redraws a resize with the new view before any frame", async () => {
+    await mountScene(APPEARANCE);
+    show(VIEW_ALL, 1);
+    flushFrame(0);
+    expect(ctx.setTransform).toHaveBeenLastCalledWith(1, 0, 0, 1, -0, -0);
+
+    // No rAF flush: the immediate redraw must already see VIEW_PART's k.
+    show(VIEW_PART, 2);
+    expect(ctx.setTransform).toHaveBeenLastCalledWith(2, 0, 0, 2, -0, -0);
+  });
+
+  it("shows a focus ring inside the full-screen scroller", async () => {
+    await mountScene(APPEARANCE);
+    expect(screen.getByRole("region", { name: "Room" })).toHaveClass(
+      "focus-visible:ring-[3px]",
+      "focus-visible:ring-ring/50",
+      "focus-visible:ring-inset",
     );
   });
 
