@@ -92,7 +92,13 @@ export function useWorldCanvas(size: WorldSize | null): {
     };
 
     const onScroll = (): void => {
-      if (applied !== null) cameraRef.current = cameraX(scroller.scrollLeft, applied, width);
+      if (applied === null) return;
+      // Layout already has a new width the ResizeObserver hasn't reported yet (a
+      // snap-mandatory scroller re-snaps on resize first). Measured against the old
+      // view this scroll would move the focus, so resize() re-anchors from the last
+      // camera instead and sets the scroll position itself.
+      if (Math.abs(scroller.clientWidth - applied.backingW / applied.dpr) >= 1) return;
+      cameraRef.current = cameraX(scroller.scrollLeft, applied, width);
     };
 
     const onWheel = (event: WheelEvent): void => {

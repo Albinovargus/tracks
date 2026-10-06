@@ -103,8 +103,17 @@ function state(): { view: WorldView | null; generation: number; camera: number }
   return { ...rendered, camera: probeCamera.current };
 }
 
-/** Plays a ResizeObserver callback for a CSS content box. */
+/** Gives the scroller the layout width a browser would report (jsdom has no layout). */
+function layoutWidth(width: number): void {
+  Object.defineProperty(screen.getByTestId("scroller"), "clientWidth", {
+    configurable: true,
+    value: Math.round(width),
+  });
+}
+
+/** Plays a ResizeObserver callback for a CSS content box, after layout has that width. */
 function observe(width: number, height: number): void {
+  layoutWidth(width);
   act(() => {
     const observer = observers[observers.length - 1];
     if (!observer) throw new Error("no ResizeObserver");
@@ -187,6 +196,32 @@ describe("useWorldCanvas", () => {
     if (!view) throw new Error("no view");
     expect(view.k).toBe(5);
     expect(Math.abs(centerWorldX(state().camera, view) - (60 + 640) / 3)).toBeLessThan(1);
+    expect(scroller.scrollLeft).toBe(state().camera / view.dpr);
+  });
+
+  it("re-anchors from before the resize when the browser re-snaps first", () => {
+    setDpr(1);
+    render(<Probe size={WORLD} />);
+    observe(600, 700);
+    const scroller = screen.getByTestId("scroller");
+    act(() => {
+      scroller.scrollLeft = 255;
+      scroller.dispatchEvent(new Event("scroll"));
+    });
+    const before = state().view;
+    if (!before) throw new Error("no view");
+    const focus = centerWorldX(state().camera, before);
+    // The window widens: layout has the new width, and a snap-mandatory scroller
+    // re-snaps (firing scroll) before the ResizeObserver callback runs.
+    layoutWidth(1000);
+    act(() => {
+      scroller.scrollLeft = 55;
+      scroller.dispatchEvent(new Event("scroll"));
+    });
+    observe(1000, 700);
+    const view = state().view;
+    if (!view) throw new Error("no view");
+    expect(Math.abs(centerWorldX(state().camera, view) - focus)).toBeLessThan(1);
     expect(scroller.scrollLeft).toBe(state().camera / view.dpr);
   });
 
