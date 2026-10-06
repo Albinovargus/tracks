@@ -54,7 +54,7 @@ to `.superpowers/art-previews/` (gitignored); never commit them.
 | `body/` | `grids/fNN.txt` (one 64x64 char grid per body frame: `.` `o` `L` `B` `S`), `gridlib.mjs`, `build-run.mjs` (f08-f15), `build-turn.mjs` (f07), `derive-idle.mjs` (f02-f06 from f01), `check-run.mjs`, `preview-grid.mjs`, `paint-body.lua` (grids -> body, **saves**), `dump-body.lua` (body -> grids), `onion-review.lua` |
 | `garments/` | `lib.lua` (`G.ORDER`, `G.LAYER`), `make-sources.lua`, `map.lua`, `ops/<garment>.lua`, `paint.lua` (**saves**; `CHECK = true` does not), `check.lua`, `montage.lua`, `composite.mts` |
 | `hair/` | `convert.lua` (**saves**), `dump.lua`, `offsets.lua`, `paint.lua` (**saves**), `check.lua`, `ponytail-near-arm.lua` + `occlusion.lua`, `snap.lua` |
-| `room/` | `prelude.lua` (`C`, `rect`, `grid`, `saveSingle`, `slice`, `shell`, `newPlace`, `cloud`, world constants), `check-palette.lua`, `place-<id>.lua` (5, each **saves**), `treadmill.lua`, `frame-bib.lua`, `trophies.lua`, `medals.lua` (each **saves** to `art/room/`), `world-preview.lua` (read-only) |
+| `room/` | `prelude.lua` (`C`, `rect`, `grid`, `saveSingle`, `slice`, `shell`, `newPlace`, `cloud`, `door`, world constants), `check-palette.lua`, `place-<id>.lua` (5, each **saves**), `treadmill.lua`, `frame-bib.lua`, `trophies.lua`, `medals.lua` (each **saves** to `art/room/`), `world-preview.lua` (read-only) |
 | `lib/` | `paths.lua`, `compare-sprites.lua`, `palette-swatch.lua` |
 
 Checks that leave the sources untouched (run them after any change):
